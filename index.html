@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>架空世界地圖 - PLLT World</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    
+    <!-- 自定義CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="map"></div>
+    <div class="map-title">PLLT World Map</div>
+    
+    <div class="map-legend">
+        <h3>圖例</h3>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: #e74c3c;"></div>
+            <span>主城</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: #3498db;"></div>
+            <span>水域</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: #2ecc71;"></div>
+            <span>森林</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: #f1c40f;"></div>
+            <span>秘境</span>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- 自定義JS -->
+    <script src="js/map.js"></script>
+</body>
+</html>
