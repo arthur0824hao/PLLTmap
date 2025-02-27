@@ -1,9 +1,9 @@
 // 地圖初始設置
 const mapConfig = {
-    minZoom: -3,      // 更改為負數，允許更小的縮放級別（顯示更大範圍）
-    maxZoom: 8,       // 增加到 8，允許更大的縮放級別（顯示細節）
+    minZoom: -3,      // 更小的最小縮放級別，允許更廣闊的視圖
+    maxZoom: 8,       // 保持最大縮放級別不變
     center: [0, 0],   // 中心點
-    initialZoom: 0,   // 調整初始縮放級別為更小的值
+    initialZoom: -3,  // 初始縮放級別設置得更小
     tileSize: 256,    // 瓦片大小
     attribution: 'Map data &copy; PLLT World'
 };
@@ -15,14 +15,16 @@ const map = L.map('map', {
     maxZoom: mapConfig.maxZoom,
     zoomControl: false,  // 禁用默認縮放控制器
     attributionControl: false,  // 禁用默認歸屬控制器
-    maxBoundsViscosity: 1.0,  // 最大邊界黏性，防止拖曳超出邊界（1.0表示完全阻止）
+    maxBoundsViscosity: 0.5,  // 降低邊界黏性，使縮放更流暢
     bounceAtZoomLimits: false,  // 禁止在縮放時反彈
     inertia: true  // 啟用慣性拖曳
 }).setView(mapConfig.center, mapConfig.initialZoom);
 
 // 添加自定義縮放控制器
 L.control.zoom({
-    position: 'bottomright'
+    position: 'bottomright',
+    zoomInTitle: '放大',
+    zoomOutTitle: '縮小'
 }).addTo(map);
 
 // 添加歸屬信息
@@ -35,38 +37,29 @@ L.control.attribution({
 const mapWidth = 8080;
 const mapHeight = 8192;
 
-// 添加一個小的邊距，確保使用者無法拖曳到邊緣之外
-const paddingFactor = 0.02;  // 2% 的邊距
-const paddingX = mapWidth * paddingFactor;
-const paddingY = mapHeight * paddingFactor;
+// 添加一個擴展範圍，允許更大的縮放範圍
+const zoomFactor = 4;  // 增加縮放因子
+const extendedWidth = mapWidth * zoomFactor;
+const extendedHeight = mapHeight * zoomFactor;
 
-// 設置圖片邊界，與實際圖片尺寸一致，加上小邊距
-const bounds = [
-    [-(mapHeight/2 + paddingY), -(mapWidth/2 + paddingX)],  // 左下角坐標
-    [(mapHeight/2 + paddingY), (mapWidth/2 + paddingX)]     // 右上角坐標
+// 設置實際圖片顯示的邊界
+const imageBounds = [
+    [-mapHeight/2, -mapWidth/2],  // 左下角坐標
+    [mapHeight/2, mapWidth/2]     // 右上角坐標
 ];
 
-// 添加地圖圖層
-// 本地開發使用相對路徑
-// 修改這一行
+// 設置可視範圍邊界，比實際圖片大得多
+const viewBounds = [
+    [-extendedHeight/2, -extendedWidth/2],  // 左下角坐標
+    [extendedHeight/2, extendedWidth/2]     // 右上角坐標
+];
+
+// 添加地圖圖層 - 使用 GitHub 絕對路徑
 const mapImageUrl = 'https://raw.githubusercontent.com/arthur0824hao/PLLTmap/main/images/map.jpg';
-// 當部署到 GitHub 時使用這個路徑
-// const mapImageUrl = 'https://raw.githubusercontent.com/arthur0824hao/PLLTmap/main/images/map.jpg';
+L.imageOverlay(mapImageUrl, imageBounds).addTo(map);
 
-L.imageOverlay(mapImageUrl, bounds).addTo(map);
-
-// 設置地圖限制範圍，使用更嚴格的邊界限制
-map.setMaxBounds(bounds);
-
-// 添加嚴格的邊界保護
-map.on('drag', function() {
-    map.panInsideBounds(bounds, { animate: false });
-});
-
-// 確保縮放後不會超出邊界
-map.on('zoomend', function() {
-    map.panInsideBounds(bounds, { animate: false });
-});
+// 設置地圖最大邊界，允許更廣闊的視圖
+map.setMaxBounds(viewBounds);
 
 // 為不同類型的地點設置不同顏色
 const typeColors = {
@@ -308,8 +301,30 @@ const setupMarkerControls = () => {
     });
 };
 
+// 添加滑鼠滾輪事件監聽器，增強縮放體驗
+map.on('wheel', function(e) {
+    // 確保滾輪事件能夠觸發更大的縮放範圍
+    if (map.getZoom() <= mapConfig.minZoom && e.originalEvent.deltaY > 0) {
+        // 允許繼續縮小
+        e.preventDefault();
+        map.setZoom(map.getZoom() - 0.5, {animate: false});
+    }
+});
+
 // 當頁面加載完成後執行
 document.addEventListener('DOMContentLoaded', () => {
     setupMarkerControls();
     loadMarkers();
+    
+    // 添加鍵盤事件監聽器，用於測試和調試
+    document.addEventListener('keydown', function(e) {
+        // 按 'Z' 鍵測試最大縮小
+        if (e.key === 'z' || e.key === 'Z') {
+            map.setZoom(mapConfig.minZoom);
+        }
+        // 按 'X' 鍵返回初始視圖
+        if (e.key === 'x' || e.key === 'X') {
+            map.setView(mapConfig.center, mapConfig.initialZoom);
+        }
+    });
 });
