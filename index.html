@@ -33,13 +33,17 @@
             <div class="legend-icon" style="background-color: #f1c40f;"></div>
             <span>秘境</span>
         </div>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: #9b59b6;"></div>
+            <span>自定義</span>
+        </div>
     </div>
     
     <!-- 標記控制面板 -->
     <div class="marker-controls">
         <h3>標記工具</h3>
-        <button id="add-marker-btn">添加標記</button>
-        <button id="cancel-marker-btn" style="display:none;">取消</button>
+        <button id="add-marker-btn" onclick="beginAddMarker()">添加標記</button>
+        <button id="cancel-marker-btn" style="display:none;" onclick="cancelAddMarker()">取消</button>
         <div id="marker-form" style="display:none;">
             <input type="text" id="marker-name" placeholder="標記名稱">
             <select id="marker-type">
@@ -50,16 +54,46 @@
                 <option value="秘境">秘境</option>
             </select>
             <textarea id="marker-description" placeholder="描述（可選）"></textarea>
-            <button id="save-marker-btn">保存</button>
+            <button id="save-marker-btn" onclick="saveMarker()">保存</button>
         </div>
+        
+        <!-- 距離測量工具 -->
+        <div class="measure-tools">
+            <h4>距離測量</h4>
+            <button id="measure-distance-btn" onclick="startMeasuring()">測量距離</button>
+            <button id="cancel-measure-btn" style="display:none;" onclick="cancelMeasuring()">取消測量</button>
+            <div id="measure-result" class="measure-result" style="display:none;"></div>
+        </div>
+        
+        <!-- 匯入/匯出工具 -->
+        <div class="data-tools">
+            <h4>資料管理</h4>
+            <button id="export-markers-btn" onclick="exportMarkers()">匯出標記</button>
+            <button id="import-markers-btn" onclick="document.getElementById('import-file').click()">匯入標記</button>
+            <input type="file" id="import-file" accept=".json" style="display:none;" onchange="handleFileImport(event)">
+        </div>
+        
         <div class="marker-list-container">
-            <h4>我的標記</h4>
+            <h4>已標記地點</h4>
+            <div class="location-filter">
+                <select id="location-filter">
+                    <option value="all">全部地點</option>
+                    <option value="type-main">主城</option>
+                    <option value="type-water">水域</option>
+                    <option value="type-forest">森林</option>
+                    <option value="type-secret">秘境</option>
+                    <option value="type-custom">自定義</option>
+                </select>
+            </div>
             <ul id="user-markers-list"></ul>
         </div>
     </div>
     
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- 地圖資料庫 -->
+    <script src="js/locations-data.js"></script>
     
     <!-- 自定義JS -->
     <script src="js/map.js"></script>
