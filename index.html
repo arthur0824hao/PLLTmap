@@ -35,6 +35,29 @@
         </div>
     </div>
     
+    <!-- 標記控制面板 -->
+    <div class="marker-controls">
+        <h3>標記工具</h3>
+        <button id="add-marker-btn">添加標記</button>
+        <button id="cancel-marker-btn" style="display:none;">取消</button>
+        <div id="marker-form" style="display:none;">
+            <input type="text" id="marker-name" placeholder="標記名稱">
+            <select id="marker-type">
+                <option value="自定義">自定義</option>
+                <option value="主城">主城</option>
+                <option value="水域">水域</option>
+                <option value="森林">森林</option>
+                <option value="秘境">秘境</option>
+            </select>
+            <textarea id="marker-description" placeholder="描述（可選）"></textarea>
+            <button id="save-marker-btn">保存</button>
+        </div>
+        <div class="marker-list-container">
+            <h4>我的標記</h4>
+            <ul id="user-markers-list"></ul>
+        </div>
+    </div>
+    
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     

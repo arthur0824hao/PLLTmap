@@ -64,3 +64,114 @@ body {
     margin-right: 10px;
     border-radius: 50%;
 }
+/* 標記控制面板樣式 */
+.marker-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 4px;
+    color: white;
+    width: 250px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.marker-controls h3 {
+    margin-top: 0;
+    color: #FFD700;
+}
+
+.marker-controls button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.marker-controls button:hover {
+    background-color: #2980b9;
+}
+
+#marker-form {
+    margin-top: 10px;
+}
+
+#marker-form input,
+#marker-form select,
+#marker-form textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+#marker-form textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.marker-list-container {
+    margin-top: 15px;
+}
+
+.marker-list-container h4 {
+    color: #FFD700;
+    margin-bottom: 5px;
+}
+
+#user-markers-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#user-markers-list li {
+    padding: 8px;
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+}
+
+#user-markers-list li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#cancel-marker-btn {
+    background-color: #e74c3c !important;
+}
+
+#cancel-marker-btn:hover {
+    background-color: #c0392b !important;
+}
+
+#save-marker-btn {
+    background-color: #2ecc71;
+}
+
+#save-marker-btn:hover {
+    background-color: #27ae60;
+}
+
+/* 刪除標記按鈕 */
+.delete-marker-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-top: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.delete-marker-btn:hover {
+    background-color: #c0392b;
+}
