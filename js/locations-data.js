@@ -1,30 +1,9 @@
 /**
  * PLLT World 地圖資料庫
- * 完全自定義的地點資料庫
+ * 完全自定義的地點資料庫系統
  */
 
-// 地圖上的預設地點數據 - 保留空陣列以便統一接口
-const defaultLocations = [];
-
-// 載入用戶儲存的地點
-function loadUserLocations() {
-    const savedLocations = localStorage.getItem('plltWorldUserLocations');
-    if (savedLocations) {
-        try {
-            const userLocations = JSON.parse(savedLocations);
-            return userLocations;
-        } catch (e) {
-            console.error('無法解析用戶地點數據:', e);
-            return [];
-        }
-    }
-    return [];
-}
-
-// 合併預設和用戶地點 (實際上只有用戶地點)
-const allLocations = [...loadUserLocations()];
-
-// 地點分類信息
+// 地點分類信息 - 定義所有可用的地點類型及其屬性
 const locationCategories = {
     "主城": {
         color: "#e74c3c",
@@ -48,105 +27,221 @@ const locationCategories = {
     }
 };
 
-// 區域勢力範圍
-const territoryData = [];
+// 資料庫類別 - 管理所有地點資料
+class LocationDatabase {
+    constructor() {
+        this.locations = [];
+        this.dbVersion = 1;
+        this.lastUpdated = new Date();
+        this.load();
+    }
 
-// 旅行路線資料
-const routeData = [];
+    // 從本地存儲加載資料
+    load() {
+        try {
+            const savedData = localStorage.getItem('plltWorldLocations');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                // 確保加載的資料格式正確
+                if (Array.isArray(parsedData.locations)) {
+                    this.locations = parsedData.locations;
+                    this.dbVersion = parsedData.dbVersion || 1;
+                    this.lastUpdated = new Date(parsedData.lastUpdated || Date.now());
+                    console.log(`成功加載 ${this.locations.length} 個地點`);
+                }
+            }
+        } catch (error) {
+            console.error('加載地點資料時出錯:', error);
+            this.locations = [];
+        }
+    }
 
-// 地圖版本與元數據
-const mapMetadata = {
-    version: "2.0.0",
-    lastUpdated: "2025-02-28",
-    author: "PLLT世界創作團隊",
-    license: "CC BY-NC-SA 4.0",
-    description: "PLLT架空世界的自定義地圖資料",
-    gridSize: 100, // 每個格子代表的單位距離
-    scale: "1:10000", // 地圖比例尺
-    compassDirection: "north" // 地圖上方對應的實際方向
-};
-
-// 保存用戶地點數據到本地存儲
-function saveUserLocations(locations) {
-    try {
-        // 所有地點都是用戶地點
-        localStorage.setItem('plltWorldUserLocations', JSON.stringify(locations));
+    // 保存資料到本地存儲
+    save() {
+        try {
+            // 更新版本和時間戳
+            this.dbVersion += 1;
+            this.lastUpdated = new Date();
+            
+            // 移除所有 markerRef 引用（這些是運行時物件，不應該保存）
+            const locationsToSave = this.locations.map(location => {
+                const { markerRef, ...rest } = location;
+                return rest;
+            });
+            
+            // 構建要保存的資料結構
+            const dataToSave = {
+                locations: locationsToSave,
+                dbVersion: this.dbVersion,
+                lastUpdated: this.lastUpdated.toISOString()
+            };
+            
+            // 保存到 localStorage
+            localStorage.setItem('plltWorldLocations', JSON.stringify(dataToSave));
+            console.log(`成功保存 ${locationsToSave.length} 個地點`);
+            return true;
+        } catch (error) {
+            console.error('保存地點資料時出錯:', error);
+            return false;
+        }
+    }
+    
+    // 添加新地點
+    addLocation(locationData) {
+        // 確保地點資料具有必要欄位
+        if (!locationData.name || !locationData.coords || !locationData.type) {
+            console.error('地點資料不完整', locationData);
+            return null;
+        }
         
-        // 更新版本信息
-        localStorage.setItem('plltWorldDataVersion', Date.now().toString());
-        console.log('已保存用戶地點數據', locations.length);
+        // 創建新地點物件
+        const newLocation = {
+            id: locationData.id || 'loc-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9),
+            name: locationData.name,
+            description: locationData.description || '',
+            type: locationData.type || '自定義',
+            coords: locationData.coords,
+            createTime: locationData.createTime || new Date().toISOString(),
+            isDefault: locationData.isDefault || false,
+            tags: locationData.tags || []
+        };
         
-        return true;
-    } catch (e) {
-        console.error('保存用戶地點數據時出錯:', e);
-        return false;
+        // 添加到地點列表
+        this.locations.push(newLocation);
+        
+        // 自動保存
+        this.save();
+        
+        return newLocation;
+    }
+    
+    // 更新現有地點
+    updateLocation(id, updatedData) {
+        const index = this.locations.findIndex(loc => loc.id === id);
+        if (index === -1) {
+            console.error('未找到要更新的地點:', id);
+            return null;
+        }
+        
+        // 保留舊地點的基本欄位和 markerRef
+        const oldLocation = this.locations[index];
+        const { markerRef } = oldLocation;
+        
+        // 更新地點資料，但保留ID和創建時間
+        this.locations[index] = {
+            ...oldLocation,
+            ...updatedData,
+            id: oldLocation.id,
+            createTime: oldLocation.createTime,
+            markerRef: markerRef
+        };
+        
+        // 自動保存
+        this.save();
+        
+        return this.locations[index];
+    }
+    
+    // 刪除地點
+    deleteLocation(id) {
+        const index = this.locations.findIndex(loc => loc.id === id);
+        if (index === -1) {
+            console.error('未找到要刪除的地點:', id);
+            return null;
+        }
+        
+        const deletedLocation = this.locations[index];
+        this.locations.splice(index, 1);
+        
+        // 自動保存
+        this.save();
+        
+        return deletedLocation;
+    }
+    
+    // 取得所有地點
+    getAllLocations() {
+        return this.locations;
+    }
+    
+    // 依類型過濾地點
+    getLocationsByType(type) {
+        if (!type || type === 'all') {
+            return this.locations;
+        }
+        return this.locations.filter(loc => loc.type === type);
+    }
+    
+    // 依名稱搜尋地點
+    searchLocationsByName(query) {
+        if (!query) return this.locations;
+        
+        const lowercaseQuery = query.toLowerCase();
+        return this.locations.filter(loc => 
+            loc.name.toLowerCase().includes(lowercaseQuery) ||
+            loc.description.toLowerCase().includes(lowercaseQuery)
+        );
+    }
+    
+    // 取得資料庫統計資料
+    getStats() {
+        // 計算每種類型的地點數量
+        const typeCount = {};
+        this.locations.forEach(loc => {
+            typeCount[loc.type] = (typeCount[loc.type] || 0) + 1;
+        });
+        
+        return {
+            totalLocations: this.locations.length,
+            typeDistribution: typeCount,
+            dbVersion: this.dbVersion,
+            lastUpdated: this.lastUpdated
+        };
     }
 }
 
-// 添加一個新的用戶定義地點
-function addUserLocation(location) {
-    if (!location.id) {
-        location.id = 'user-' + Date.now();
-    }
-    
-    // 添加創建時間
-    if (!location.createTime) {
-        location.createTime = new Date().toISOString();
-    }
-    
-    // 添加到全局數組
-    allLocations.push(location);
-    
-    // 保存到本地存儲
-    saveUserLocations(allLocations);
-    
-    return location;
-}
+// 創建資料庫實例
+const locationDb = new LocationDatabase();
 
-// 刪除一個地點
-function deleteLocation(locationId) {
-    const index = allLocations.findIndex(loc => loc.id === locationId);
-    if (index !== -1) {
-        const location = allLocations[index];
-        allLocations.splice(index, 1);
-        
-        // 保存更改
-        saveUserLocations(allLocations);
-        return location;
+// 監聽鍵盤事件，當按下 "s" 鍵時保存所有地點
+document.addEventListener('keydown', function(e) {
+    if (e.key === 's' || e.key === 'S') {
+        e.preventDefault(); // 防止瀏覽器默認的保存行為
+        if (locationDb.save()) {
+            console.log('所有地點已手動保存！');
+            // 如果UI中有提示功能，可以使用
+            if (typeof showToast === 'function') {
+                showToast('所有地點已保存！');
+            } else {
+                alert('所有地點已保存！');
+            }
+        }
     }
-    return null;
-}
+});
 
-// 匯出數據供其他腳本使用
+// 匯出資料庫供其他腳本使用
 try {
     // 瀏覽器環境
     if (typeof window !== 'undefined') {
         window.plltWorldData = {
-            locations: allLocations,
+            locations: locationDb.locations,
             categories: locationCategories,
-            territories: territoryData,
-            routes: routeData,
-            metadata: mapMetadata,
             
-            // 匯出函數
-            addUserLocation: addUserLocation,
-            deleteLocation: deleteLocation,
-            saveUserLocations: saveUserLocations
+            // 提供資料庫操作函數
+            addUserLocation: (data) => locationDb.addLocation(data),
+            updateLocation: (id, data) => locationDb.updateLocation(id, data),
+            deleteLocation: (id) => locationDb.deleteLocation(id),
+            saveUserLocations: () => locationDb.save(),
+            getLocationsByType: (type) => locationDb.getLocationsByType(type),
+            searchLocations: (query) => locationDb.searchLocationsByName(query),
+            getStats: () => locationDb.getStats()
         };
     } 
     // Node.js環境
     else if (typeof module !== 'undefined' && module.exports) {
         module.exports = {
-            locations: allLocations,
-            categories: locationCategories,
-            territories: territoryData,
-            routes: routeData,
-            metadata: mapMetadata,
-            
-            // 匯出函數
-            addUserLocation: addUserLocation,
-            deleteLocation: deleteLocation,
-            saveUserLocations: saveUserLocations
+            db: locationDb,
+            categories: locationCategories
         };
     }
 } catch (e) {
