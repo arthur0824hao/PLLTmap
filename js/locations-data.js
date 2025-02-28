@@ -53,8 +53,137 @@ const locationCategories = {
 
 // 硬編碼的地點資料 - 這裡可以直接放入匯出的資料
 const hardcodedLocations = [
-
-  ] ;
+    {
+      "id": "loc-1740745898438-wjiy8qx",
+      "name": "托斯特鎮",
+      "description": "66666666",
+      "type": "城鎮",
+      "coords": [
+        -1381,
+        -2627
+      ],
+      "createTime": "2025-02-28T12:31:38.438Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740746056959-ysasaz5",
+      "name": "奇納勒島",
+      "description": "10101010",
+      "type": "秘境",
+      "coords": [
+        -1076,
+        -2194
+      ],
+      "createTime": "2025-02-28T12:34:16.959Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740745969006-venripl",
+      "name": "迪沙特山",
+      "description": "888888888",
+      "type": "山",
+      "coords": [
+        -1334,
+        -2408
+      ],
+      "createTime": "2025-02-28T12:32:49.006Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740745680542-o7l5j2j",
+      "name": "桑圭亞流域",
+      "description": "1111111111",
+      "type": "森林",
+      "coords": [
+        -1713.5,
+        -2649.5
+      ],
+      "createTime": "2025-02-28T12:28:00.542Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740745738230-ewz4fcr",
+      "name": "紐特奧城",
+      "description": "33333333333",
+      "type": "首都",
+      "coords": [
+        -1502.6019100214135,
+        -2761.2519805334678
+      ],
+      "createTime": "2025-02-28T12:28:58.230Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740745838430-9kwpwsf",
+      "name": "凱歐司沙漠",
+      "description": "55555555555",
+      "type": "自定義",
+      "coords": [
+        -1426.9414844344528,
+        -2526.4925291795344
+      ],
+      "createTime": "2025-02-28T12:30:38.431Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740745990758-rb6okx5",
+      "name": "溫特灣",
+      "description": "999999",
+      "type": "水域",
+      "coords": [
+        -1157,
+        -2445
+      ],
+      "createTime": "2025-02-28T12:33:10.758Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740745715950-ccqt54a",
+      "name": "蒙姆要塞",
+      "description": "222222222222",
+      "type": "要塞",
+      "coords": [
+        -1618.5674221360073,
+        -2636.8011870446358
+      ],
+      "createTime": "2025-02-28T12:28:35.950Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740745783990-biqh58m",
+      "name": "豪費斯特哨站",
+      "description": "44444444444",
+      "type": "哨站",
+      "coords": [
+        -1425.5272708720797,
+        -2810.7494552165263
+      ],
+      "createTime": "2025-02-28T12:29:43.990Z",
+      "isDefault": false,
+      "tags": []
+    },
+    {
+      "id": "loc-1740745935422-85q19h8",
+      "name": "蘇蒙特平原",
+      "description": "7777777",
+      "type": "平原",
+      "coords": [
+        -1436,
+        -2732
+      ],
+      "createTime": "2025-02-28T12:32:15.422Z",
+      "isDefault": false,
+      "tags": []
+    }
+  ];
 
 // 資料庫類別 - 管理所有地點資料
 class LocationDatabase {
