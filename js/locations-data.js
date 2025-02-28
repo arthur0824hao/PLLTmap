@@ -199,22 +199,51 @@ const hardcodedLocations = [
 // 資料庫類別 - 管理所有地點資料
 class LocationDatabase {
     constructor() {
+        console.log('初始化位置數據庫...');
         this.locations = [];
         this.dbVersion = 1;
         this.lastUpdated = new Date();
-        this.load();
+        
+        // 構造函數中不要立即加載，因為在腳本執行順序中可能出現問題
+        // 改為提供明確的加載方法，隨後在適當時機調用
     }
 
-    // 從硬編碼資料加載
+    // 從硬編碼資料加載 - 修正為明確加載 hardcodedLocations 數組
     load() {
         try {
-            this.locations = [...hardcodedLocations];
-            this.dbVersion = 1;
-            this.lastUpdated = new Date();
-            console.log(`成功加載 ${this.locations.length} 個硬編碼地點`);
-        } catch (error) {
-            console.error('加載地點資料時出錯:', error);
+            console.log('【數據庫】正在加載硬編碼地點數據...');
+            
+            // 清空現有數據以避免重複
             this.locations = [];
+            
+            // 確認 hardcodedLocations 存在且為數組
+            if (typeof hardcodedLocations === 'undefined' || !Array.isArray(hardcodedLocations)) {
+                console.error('【數據庫】hardcodedLocations 未定義或不是數組!');
+                return [];
+            }
+            
+            console.log(`【數據庫】找到 ${hardcodedLocations.length} 個硬編碼地點，開始加載...`);
+            
+            // 複製每個地點對象，避免直接引用
+            hardcodedLocations.forEach((location, index) => {
+                const locationCopy = JSON.parse(JSON.stringify(location)); // 深拷貝
+                this.locations.push(locationCopy);
+                console.log(`【數據庫】已加載地點 ${index+1}/${hardcodedLocations.length}: ${locationCopy.name}`);
+            });
+            
+            console.log(`【數據庫】成功加載 ${this.locations.length} 個硬編碼地點`);
+            
+            // 觸發加載完成事件
+            const event = new CustomEvent('plltWorldDataLoaded', {
+                detail: { count: this.locations.length }
+            });
+            document.dispatchEvent(event);
+            
+            return this.locations;
+        } catch (error) {
+            console.error('【數據庫】加載地點資料時出錯:', error);
+            this.locations = [];
+            return [];
         }
     }
 
@@ -439,6 +468,11 @@ class LocationDatabase {
 // 創建資料庫實例
 const locationDb = new LocationDatabase();
 
+// 明確執行加載 - 確保硬編碼地點被加載
+console.log('【數據庫】明確調用 load() 方法加載數據');
+const loadedLocations = locationDb.load();
+console.log(`【數據庫】load() 方法返回了 ${loadedLocations.length} 個地點`);
+
 // 監聽鍵盤事件，當按下 "e" 鍵時匯出所有地點的 JSON
 document.addEventListener('keydown', function(e) {
     if (e.key === 'e' || e.key === 'E') {
@@ -474,7 +508,7 @@ try {
     // 瀏覽器環境
     if (typeof window !== 'undefined') {
         window.plltWorldData = {
-            locations: locationDb.locations,
+            locations: locationDb.locations, // 直接使用 locationDb.locations 確保引用最新數據
             categories: locationCategories,
             
             // 提供資料庫操作函數
@@ -488,8 +522,21 @@ try {
             // 匯入/匯出功能
             importLocations: (data, clearExisting) => locationDb.importLocations(data, clearExisting),
             getFullDatabase: () => locationDb.getFullDatabase(),
-            getLocationsJson: () => locationDb.getLocationsJson()
+            getLocationsJson: () => locationDb.getLocationsJson(),
+            
+            // 提供重新加載方法 - 允許隨時刷新數據
+            reload: () => {
+                locationDb.load();
+                return locationDb.locations;
+            }
         };
+        
+        console.log(`【數據庫】已將 plltWorldData 掛載到 window，包含 ${window.plltWorldData.locations.length} 個地點`);
+        
+        // 輸出每個位置的名稱，以便於調試
+        window.plltWorldData.locations.forEach((loc, idx) => {
+            console.log(`【數據庫】位置 ${idx+1}: ${loc.name} (${loc.type})`);
+        });
     } 
     // Node.js環境
     else if (typeof module !== 'undefined' && module.exports) {

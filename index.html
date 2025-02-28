@@ -25,62 +25,176 @@
     </div>
     
     <!-- 標記控制面板 -->
-    <div class="marker-controls">
+    <div class="marker-controls collapsible-panel" data-position="right">
         <h3>標記工具</h3>
-        <button id="add-marker-btn" onclick="beginAddMarker()">添加標記</button>
-        <button id="cancel-marker-btn" style="display:none;" onclick="cancelAddMarker()">取消</button>
+        <button id="add-marker-btn">添加標記</button>
+        <button id="cancel-marker-btn" style="display:none;">取消</button>
         <div id="marker-form" style="display:none;">
             <input type="text" id="marker-name" placeholder="標記名稱">
             <select id="marker-type">
                 <option value="自定義">自定義</option>
-                <option value="主城">主城</option>
-                <option value="水域">水域</option>
-                <option value="森林">森林</option>
-                <option value="秘境">秘境</option>
             </select>
             <textarea id="marker-description" placeholder="描述（可選）"></textarea>
-            <button id="save-marker-btn" onclick="saveMarker()">保存</button>
+            <button id="save-marker-btn">保存</button>
         </div>
         
         <!-- 距離測量工具 -->
         <div class="measure-tools">
             <h4>距離測量</h4>
-            <button id="measure-distance-btn" onclick="startMeasuring()">測量距離</button>
-            <button id="cancel-measure-btn" style="display:none;" onclick="cancelMeasuring()">取消測量</button>
+            <button id="measure-distance-btn">測量距離</button>
+            <button id="cancel-measure-btn" style="display:none;">取消測量</button>
             <div id="measure-result" class="measure-result" style="display:none;"></div>
         </div>
         
         <!-- 匯入/匯出工具 -->
         <div class="data-tools">
             <h4>資料管理</h4>
-            <button id="export-markers-btn" onclick="exportMarkers()">匯出標記</button>
-            <button id="import-markers-btn" onclick="document.getElementById('import-file').click()">匯入標記</button>
-            <input type="file" id="import-file" accept=".json" style="display:none;" onchange="handleFileImport(event)">
-        </div>
-        
-        <div class="marker-list-container">
-            <h4>已標記地點</h4>
-            <div class="location-filter">
-                <select id="location-filter">
-                    <option value="all">全部地點</option>
-                    <option value="type-main">主城</option>
-                    <option value="type-water">水域</option>
-                    <option value="type-forest">森林</option>
-                    <option value="type-secret">秘境</option>
-                    <option value="type-custom">自定義</option>
-                </select>
-            </div>
-            <ul id="user-markers-list"></ul>
+            <button id="export-markers-btn">匯出標記</button>
+            <button id="import-markers-btn">匯入標記</button>
+            <input type="file" id="import-file" accept=".json" style="display:none;">
+            <!-- 移除修復按鈕和提示 -->
         </div>
     </div>
     
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     
-    <!-- 地圖資料庫 -->
+    <!-- 系統工具模組 - 整合了日誌、調試和初始化檢查功能 -->
+    <script src="js/system.js"></script>
+    
+    <!-- 地圖資料庫 - 確保首先加載 -->
     <script src="js/locations-data.js"></script>
     
-    <!-- 自定義JS -->
-    <script src="js/map.js"></script>
+    <!-- UI 模塊 -->
+    <script src="js/ui.js"></script>
+    
+    <!-- 距離測量模塊 -->
+    <script src="js/distance.js"></script>
+    
+    <!-- 標記模塊 -->
+    <script src="js/markers.js"></script>
+
+    <!-- 過濾模塊 -->
+    <script src="js/filter.js"></script>
+    
+    <!-- 主要邏輯 -->
+    <script src="js/main.js"></script>
+    
+    <!-- 等待短暫時間確保數據庫初始化 -->
+    <script>
+        console.log("確保數據庫已載入: ", window.plltWorldData ? '成功' : '失敗');
+        if (!window.plltWorldData && typeof locationDb !== 'undefined') {
+            console.log("手動初始化 plltWorldData 對象");
+            window.plltWorldData = {
+                locations: locationDb.locations,
+                categories: locationCategories,
+                
+                // 提供資料庫操作函數
+                addUserLocation: (data) => locationDb.addLocation(data),
+                updateLocation: (id, data) => locationDb.updateLocation(id, data),
+                deleteLocation: (id) => locationDb.deleteLocation(id),
+                getLocationsByType: (type) => locationDb.getLocationsByType(type),
+                searchLocations: (query) => locationDb.searchLocationsByName(query),
+                getStats: () => locationDb.getStats(),
+                
+                // 匯入/匯出功能
+                importLocations: (data, clearExisting) => locationDb.importLocations(data, clearExisting),
+                getFullDatabase: () => locationDb.getFullDatabase(),
+                getLocationsJson: () => locationDb.getLocationsJson(),
+                
+                // 提供重新加載方法
+                reload: () => {
+                    locationDb.load();
+                    return locationDb.locations;
+                }
+            };
+        }
+    </script>
+    
+    <!-- 事件綁定腳本 -->
+    <script>
+        // 等待頁面加載後，綁定所有事件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 標記相關按鈕
+            document.getElementById('add-marker-btn').addEventListener('click', function() {
+                if (window.markersModule) window.markersModule.beginAddMarker();
+            });
+            
+            document.getElementById('cancel-marker-btn').addEventListener('click', function() {
+                if (window.markersModule) window.markersModule.cancelAddMarker();
+            });
+            
+            document.getElementById('save-marker-btn').addEventListener('click', function() {
+                if (window.markersModule) window.markersModule.saveMarker();
+            });
+            
+            // 距離測量相關按鈕
+            document.getElementById('measure-distance-btn').addEventListener('click', function() {
+                if (window.distanceModule) window.distanceModule.startMeasuring();
+            });
+            
+            document.getElementById('cancel-measure-btn').addEventListener('click', function() {
+                if (window.distanceModule) window.distanceModule.cancelMeasuring();
+            });
+            
+            // 匯入/匯出相關按鈕
+            document.getElementById('export-markers-btn').addEventListener('click', function() {
+                if (window.markersModule) window.markersModule.exportMarkers();
+            });
+            
+            document.getElementById('import-markers-btn').addEventListener('click', function() {
+                document.getElementById('import-file').click();
+            });
+            
+            document.getElementById('import-file').addEventListener('change', function(event) {
+                if (window.markersModule) window.markersModule.handleFileImport(event);
+            });
+            
+            // 添加一個備用的地圖點擊處理機制
+            document.getElementById('map').addEventListener('click', function(e) {
+                // 只有在點擊是直接發生在地圖元素上時才處理
+                if (e.target === this || e.target.classList.contains('leaflet-container')) {
+                    console.log('地圖元素接收到點擊');
+                    
+                    // 檢測是否為添加標記模式
+                    if (window.markersModule && window.markersModule.isAddingMarker()) {
+                        // 使用特殊方法處理
+                        setTimeout(function() {
+                            const mapCenter = window.map.getCenter();
+                            window.uiModule.showToast('請點擊地圖任意位置');
+                        }, 100);
+                    }
+                }
+            });
+            
+            // 最終檢查: 確保標記被加載
+            setTimeout(function() {
+                console.log("最終檢查: 確保標記顯示");
+                
+                // 如果地圖上沒有顯示標記，強制重新初始化
+                if (window.map && window.markersModule && 
+                    window.plltWorldData && window.plltWorldData.locations && 
+                    window.plltWorldData.locations.length > 0) {
+                    
+                    const visibleMarkers = document.querySelectorAll('.custom-marker-container').length;
+                    console.log(`檢測到 ${visibleMarkers} 個可見標記點 (資料庫中有 ${window.plltWorldData.locations.length} 個位置)`);
+                    
+                    if (visibleMarkers === 0) {
+                        console.log("未檢測到可見標記，強制重新初始化...");
+                        window.markersModule.initializeMapLocations();
+                    }
+                }
+                
+                // 執行系統檢查
+                if (window.systemTools && window.systemTools.checker) {
+                    window.systemTools.checker.checkAll();
+                }
+            }, 2000);
+            
+            // 移除修復按鈕相關代碼
+            
+            // 移除可能導致問題的初始提示
+        });
+    </script>
 </body>
 </html>
