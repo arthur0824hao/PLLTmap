@@ -5,70 +5,56 @@
 
 // 地點分類信息 - 定義所有可用的地點類型及其屬性
 const locationCategories = {
-    "主城": {
+    "首都": {
         color: "#e74c3c",
-        description: "主要城市和居民聚集地，通常有完善的防禦設施和商業中心"
+        description: "國家或區域的政治中心，通常擁有最完善的基礎設施和防禦系統"
     },
-    "水域": {
-        color: "#3498db",
-        description: "河流、湖泊等水體，可能蘊含特殊的魔法屬性或神秘生物"
+    "城市": {
+        color: "#d35400",
+        description: "大型居民聚集地，有完善的商業中心和基礎建設"
+    },
+    "城鎮": {
+        color: "#f39c12",
+        description: "中小型居民聚集地，有基本的商業和生活設施"
+    },
+    "要塞": {
+        color: "#8e44ad",
+        description: "軍事防禦建築，通常位於戰略要地"
+    },
+    "哨站": {
+        color: "#9b59b6",
+        description: "邊境或戰略位置的小型防禦或監視站"
+    },
+    "平原": {
+        color: "#f1c40f",
+        description: "開闊的平坦地形，適合農耕或行軍"
     },
     "森林": {
         color: "#2ecc71",
         description: "茂密的樹林，通常有豐富的自然資源和隱匿的生物"
     },
+    "山": {
+        color: "#95a5a6",
+        description: "高聳的地形，可能蘊含礦產資源或作為天然屏障"
+    },
+    "水域": {
+        color: "#3498db",
+        description: "河流、湖泊等水體，可能蘊含特殊的魔法屬性或神秘生物"
+    },
     "秘境": {
-        color: "#f1c40f",
+        color: "#e67e22",
         description: "神秘且難以到達的地區，常藏有珍寶或古老的知識"
     },
     "自定義": {
-        color: "#9b59b6",
+        color: "#1abc9c",
         description: "由玩家自行定義的地點類型"
     }
 };
 
 // 硬編碼的地點資料 - 這裡可以直接放入匯出的資料
 const hardcodedLocations = [
-    {
-      "id": "user-1740714905774",
-      "name": "a",
-      "description": "",
-      "type": "自定義",
-      "coords": [
-        3153.7772689872163,
-        9.513656920021768
-      ],
-      "createTime": "2025-02-28T03:55:05.774Z",
-      "isDefault": false,
-      "tags": []
-    },
-    {
-      "id": "user-1740714910229",
-      "name": "b",
-      "description": "",
-      "type": "自定義",
-      "coords": [
-        3434.4301481278585,
-        -599.3603859613714
-      ],
-      "createTime": "2025-02-28T03:55:10.229Z",
-      "isDefault": false,
-      "tags": []
-    },
-    {
-      "id": "user-1740714919484",
-      "name": "c",
-      "description": "",
-      "type": "自定義",
-      "coords": [
-        3232,
-        2800
-      ],
-      "createTime": "2025-02-28T03:55:19.484Z",
-      "isDefault": false,
-      "tags": []
-    }
-  ];
+
+  ] ;
 
 // 資料庫類別 - 管理所有地點資料
 class LocationDatabase {

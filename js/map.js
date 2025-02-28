@@ -6,17 +6,28 @@ function setupLocationFilter() {
     filterControl.onAdd = function() {
         const container = L.DomUtil.create('div', 'location-type-filter');
         
-        container.innerHTML = `
+        // 初始化HTML
+        let filterHTML = `
             <div class="filter-title">顯示地點類型</div>
             <div class="filter-options">
                 <label><input type="checkbox" data-type="all" checked> 全部</label>
-                <label><input type="checkbox" data-type="主城" checked> 主城</label>
-                <label><input type="checkbox" data-type="水域" checked> 水域</label>
-                <label><input type="checkbox" data-type="森林" checked> 森林</label>
-                <label><input type="checkbox" data-type="秘境" checked> 秘境</label>
-                <label><input type="checkbox" data-type="自定義" checked> 自定義</label>
-            </div>
         `;
+        
+        // 從locationCategories中獲取所有類型
+        if (window.plltWorldData && window.plltWorldData.categories) {
+            Object.keys(window.plltWorldData.categories).forEach(type => {
+                filterHTML += `<label><input type="checkbox" data-type="${type}" checked> ${type}</label>`;
+            });
+        } else {
+            // 備用選項，如果無法訪問categories
+            const defaultTypes = ["首都", "城市", "城鎮", "要塞", "哨站", "平原", "森林", "山", "水域", "秘境", "自定義"];
+            defaultTypes.forEach(type => {
+                filterHTML += `<label><input type="checkbox" data-type="${type}" checked> ${type}</label>`;
+            });
+        }
+        
+        filterHTML += `</div>`;
+        container.innerHTML = filterHTML;
         
         // 阻止地圖事件傳播，以便能正常使用控制項
         L.DomEvent.disableClickPropagation(container);
@@ -45,6 +56,8 @@ function setupLocationFilter() {
             color: white;
             max-width: 200px;
             font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
         }
         
         .filter-title {
@@ -261,11 +274,17 @@ L.control.scale({
 
 // 為不同類型的地點設置不同顏色
 const typeColors = {
-    "主城": "#e74c3c",
-    "水域": "#3498db",
+    "首都": "#e74c3c",
+    "城市": "#d35400",
+    "城鎮": "#f39c12",
+    "要塞": "#8e44ad",
+    "哨站": "#9b59b6",
+    "平原": "#f1c40f",
     "森林": "#2ecc71",
-    "秘境": "#f1c40f",
-    "自定義": "#9b59b6"
+    "山": "#95a5a6",
+    "水域": "#3498db",
+    "秘境": "#e67e22",
+    "自定義": "#1abc9c"
 };
 
 // 使用locations-data.js中的地點數據
@@ -297,26 +316,33 @@ function updateMarkersCount() {
 }
 
 // 添加地點到地圖
+
 function addDefaultLocationToMap(location) {
-    console.log(`添加地點: ${location.name}`);
+    console.log(`添加地點: ${location.name}`, location);
     const marker = L.circleMarker(location.coords, {
         radius: 8,
-        fillColor: typeColors[location.type] || "#9b59b6",
+        fillColor: typeColors[location.type] || "#1abc9c", // 使用自定義顏色或默認顏色
         color: "#fff",
         weight: 2,
         opacity: 1,
         fillOpacity: 0.8
     }).addTo(map);
     
-    // 所有地點都可刪除
-    const deleteButton = `<button class="delete-marker-btn" data-id="${location.id}" onclick="deleteLocation('${location.id}')">刪除標記</button>`;
+    // 確保所有地點都有 ID
+    if (!location.id) {
+        location.id = 'loc-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+        console.log('為地點生成新ID:', location.id);
+    }
+    
+    // 所有地點都可刪除，修正刪除按鈕
+    const deleteButton = `<button class="delete-marker-btn" onclick="deleteLocation('${location.id}')">刪除標記</button>`;
     
     // 添加彈出信息
     const popupContent = `
         <div class="location-info">
             <h3>${location.name}</h3>
             <p><strong>類型:</strong> ${location.type}</p>
-            <p>${location.description}</p>
+            <p>${location.description || ''}</p>
             ${deleteButton}
         </div>
     `;
@@ -332,7 +358,36 @@ function addDefaultLocationToMap(location) {
     marker.on('mouseout', function() {
         this.setRadius(8);
     });
+    
+    return marker;
 }
+
+function updateMarkerTypeOptions() {
+    const markerTypeSelect = document.getElementById('marker-type');
+    if (markerTypeSelect) {
+        markerTypeSelect.innerHTML = ''; // 清空現有選項
+        
+        // 從locationCategories中獲取所有類型
+        if (window.plltWorldData && window.plltWorldData.categories) {
+            Object.keys(window.plltWorldData.categories).forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                markerTypeSelect.appendChild(option);
+            });
+        } else {
+            // 備用選項，如果無法訪問categories
+            const defaultTypes = ["首都", "城市", "城鎮", "要塞", "哨站", "平原", "森林", "山", "水域", "秘境", "自定義"];
+            defaultTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                markerTypeSelect.appendChild(option);
+            });
+        }
+    }
+}
+
 
 // 用戶標記功能實現
 
@@ -346,6 +401,9 @@ function beginAddMarker() {
     document.getElementById('add-marker-btn').style.display = 'none';
     document.getElementById('cancel-marker-btn').style.display = 'block';
     map.getContainer().style.cursor = 'crosshair';
+    
+    // 更新標記類型選項
+    updateMarkerTypeOptions();
 }
 
 // 取消添加標記
@@ -358,7 +416,8 @@ function cancelAddMarker() {
     map.getContainer().style.cursor = '';
 }
 
-// 保存標記
+
+// 在保存標記函數中確保正確添加ID
 function saveMarker() {
     console.log('保存標記');
     const markerForm = document.getElementById('marker-form');
@@ -375,9 +434,9 @@ function saveMarker() {
         parseFloat(markerForm.dataset.lng)
     ];
     
-    // 創建新標記
+    // 創建新標記，確保ID格式一致
     const newMarker = {
-        id: 'user-' + Date.now().toString(),
+        id: 'loc-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9),
         name,
         type,
         description,
@@ -386,18 +445,26 @@ function saveMarker() {
         isDefault: false
     };
     
+    console.log('創建新標記:', newMarker);
+    
     // 使用locations-data.js的函數添加地點
     if (window.plltWorldData && window.plltWorldData.addUserLocation) {
-        window.plltWorldData.addUserLocation(newMarker);
+        const addedLocation = window.plltWorldData.addUserLocation(newMarker);
         
-        // 添加到地圖
-        addDefaultLocationToMap(newMarker);
-        
-        // 更新UI
-        updateMarkersCount();
-        
-        // 顯示成功提示
-        showToast(`成功添加標記：${name}`);
+        if (addedLocation) {
+            // 添加到地圖
+            addDefaultLocationToMap(addedLocation);
+            
+            // 更新UI
+            updateMarkersCount();
+            updateMarkersList();
+            
+            // 顯示成功提示
+            showToast(`成功添加標記：${name}`);
+        } else {
+            console.error('添加標記失敗');
+            showToast('添加標記失敗');
+        }
     } else {
         console.error('無法訪問plltWorldData.addUserLocation函數');
         alert('保存失敗：無法訪問資料庫');
@@ -409,6 +476,72 @@ function saveMarker() {
     document.getElementById('cancel-marker-btn').style.display = 'none';
     markerForm.style.display = 'none';
     map.getContainer().style.cursor = '';
+}
+
+// 修改刪除地點的函數
+function deleteLocation(id) {
+    console.log('嘗試刪除地點', id);
+    
+    if (!id) {
+        console.error('無效的ID:', id);
+        alert('刪除失敗：無效的ID');
+        return false;
+    }
+    
+    // 找到對應的地點對象
+    let locationToDelete = null;
+    if (window.plltWorldData && window.plltWorldData.locations) {
+        locationToDelete = window.plltWorldData.locations.find(loc => loc.id === id);
+    }
+    
+    if (!locationToDelete) {
+        console.error('找不到ID對應的地點:', id);
+        alert('刪除失敗：找不到該標記');
+        return false;
+    }
+    
+    console.log('找到要刪除的地點:', locationToDelete);
+    
+    // 從地圖中移除標記
+    if (locationToDelete.markerRef) {
+        map.removeLayer(locationToDelete.markerRef);
+    }
+    
+    // 從資料庫中刪除
+    if (window.plltWorldData && window.plltWorldData.deleteLocation) {
+        try {
+            window.plltWorldData.deleteLocation(id);
+            
+            // 額外檢查是否真的從數組中移除了
+            const stillExists = window.plltWorldData.locations.some(loc => loc.id === id);
+            if (stillExists) {
+                console.error('刪除後地點仍然存在:', id);
+                
+                // 手動從數組中移除
+                const index = window.plltWorldData.locations.findIndex(loc => loc.id === id);
+                if (index !== -1) {
+                    window.plltWorldData.locations.splice(index, 1);
+                    console.log('手動從數組中移除地點');
+                }
+            }
+            
+            // 更新UI
+            updateMarkersCount();
+            updateMarkersList();
+            
+            // 顯示刪除成功提示
+            showToast(`已刪除標記：${locationToDelete.name || '未命名標記'}`);
+            return true;
+        } catch (error) {
+            console.error('刪除地點時發生錯誤:', error);
+            alert('刪除標記時發生錯誤: ' + error.message);
+            return false;
+        }
+    } else {
+        console.error('無法訪問plltWorldData.deleteLocation函數');
+        alert('刪除失敗：無法訪問資料庫');
+        return false;
+    }
 }
 
 // 測量距離功能實現
@@ -479,6 +612,7 @@ function clearMeasurement() {
 }
 
 // 添加測量點
+// 修改添加測量點的函數
 function addDistancePoint(latlng) {
     console.log('添加測量點', latlng);
     // 如果已經有兩個點，先清除
@@ -528,8 +662,9 @@ function addDistancePoint(latlng) {
             dashArray: '5, 8'
         }).addTo(map);
         
-        // 計算距離
-        const distance = calculateDistance(distancePoints[0], distancePoints[1]);
+        // 計算距離（單位：天）
+        const rawDistance = calculateDistance(distancePoints[0], distancePoints[1]);
+        const distanceInDays = rawDistance / 100; // 100單位 = 1天
         
         // 計算中點，用於顯示距離標籤
         const midPoint = L.latLng(
@@ -539,7 +674,7 @@ function addDistancePoint(latlng) {
         
         // 顯示距離標籤
         const distanceLabel = L.divIcon({
-            html: `<div class="distance-info">${distance.toFixed(2)} 單位</div>`,
+            html: `<div class="distance-info">${distanceInDays.toFixed(2)} 天</div>`,
             className: 'distance-info-container',
             iconSize: [80, 30],
             iconAnchor: [40, 15]
@@ -554,7 +689,7 @@ function addDistancePoint(latlng) {
         
         // 更新結果顯示
         document.getElementById('measure-result').innerHTML = `
-            <strong>測量結果：</strong> ${distance.toFixed(2)} 單位<br>
+            <strong>測量結果：</strong> ${distanceInDays.toFixed(2)} 天（${rawDistance.toFixed(2)} 單位）<br>
             <small>點1: (${distancePoints[0].lat.toFixed(2)}, ${distancePoints[0].lng.toFixed(2)})</small><br>
             <small>點2: (${distancePoints[1].lat.toFixed(2)}, ${distancePoints[1].lng.toFixed(2)})</small><br>
             <small>點擊繼續測量，或右鍵退出測量模式</small>
@@ -568,14 +703,13 @@ function addDistancePoint(latlng) {
     }
 }
 
-// 計算兩點之間的距離
+// 修改計算兩點之間的距離的函數
 function calculateDistance(point1, point2) {
     // 使用畢氏定理計算歐幾里得距離
     const dx = point2.lng - point1.lng;
     const dy = point2.lat - point1.lat;
     return Math.sqrt(dx * dx + dy * dy);
 }
-
 // 匯出/匯入功能實現
 
 // 匯出標記點為JSON檔案 (修改後的版本)
@@ -1133,36 +1267,7 @@ function initializeFilter() {
     document.head.appendChild(style);
 }
 
-// 刪除地點（預設和用戶添加的都可刪除）
-function deleteLocation(id) {
-    console.log('刪除地點', id);
-    
-    if (window.plltWorldData && window.plltWorldData.deleteLocation) {
-        // 尋找並刪除地點
-        const deletedLocation = window.plltWorldData.deleteLocation(id);
-        
-        if (deletedLocation) {
-            // 從地圖中移除標記
-            if (deletedLocation.markerRef) {
-                map.removeLayer(deletedLocation.markerRef);
-            }
-            
-            // 更新計數
-            updateMarkersCount();
-            
-            // 顯示刪除成功提示
-            showToast(`已刪除標記：${deletedLocation.name}`);
-            return true;
-        } else {
-            console.error('未找到要刪除的地點:', id);
-        }
-    } else {
-        console.error('無法訪問plltWorldData.deleteLocation函數');
-        alert('刪除失敗：無法訪問資料庫');
-    }
-    
-    return false;
-}
+
 
 // 地圖滾輪和鍵盤事件處理
 
