@@ -272,12 +272,12 @@ L.control.scale({
     position: 'bottomleft'
 }).addTo(map);
 
-// 為不同類型的地點設置不同顏色
+// 為不同類型的地點設置不同顏色和圖標
 const typeColors = {
     "首都": "#e74c3c", // 紅色
-    "城市": "#d35400", // 橙色
+    "城市": "#d35400", // 深橘色
     "城鎮": "#f39c12", // 黃色
-    "要塞": "#8e44ad", // 紫色
+    "要塞": "#8e44ad", // 深紫色
     "哨站": "#9b59b6", // 淺紫色
     "平原": "#f1c40f", // 金色
     "森林": "#2ecc71", // 綠色
@@ -319,13 +319,31 @@ function updateMarkersCount() {
 
 function addDefaultLocationToMap(location) {
     console.log(`添加地點: ${location.name}`, location);
-    const marker = L.circleMarker(location.coords, {
-        radius: 8,
-        fillColor: typeColors[location.type] || "#1abc9c", // 使用自定義顏色或默認顏色
-        color: "#fff",
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0.8
+    
+    // 獲取此類型的圖標
+    let icon = "fa-map-pin"; // 默認圖標
+    let markerColor = typeColors[location.type] || "#1abc9c";
+    
+    // 從資料庫獲取圖標
+    if (window.plltWorldData && window.plltWorldData.categories && 
+        window.plltWorldData.categories[location.type]) {
+        icon = window.plltWorldData.categories[location.type].icon || icon;
+    }
+    
+    // 創建帶圖標的標記
+    const markerHtml = `<div class="custom-marker" style="background-color: ${markerColor}">
+                           <i class="fa-solid ${icon}"></i>
+                        </div>`;
+    
+    const customIcon = L.divIcon({
+        html: markerHtml,
+        className: 'custom-marker-container',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+    });
+    
+    const marker = L.marker(location.coords, {
+        icon: customIcon
     }).addTo(map);
     
     // 確保所有地點都有 ID
@@ -351,13 +369,34 @@ function addDefaultLocationToMap(location) {
     // 保存標記對象的引用
     location.markerRef = marker;
     
-    // 鼠標懸停效果
-    marker.on('mouseover', function() {
-        this.setRadius(12);
-    });
-    marker.on('mouseout', function() {
-        this.setRadius(8);
-    });
+    // 添加標記CSS
+    if (!document.getElementById('marker-styles')) {
+        const markerStyles = document.createElement('style');
+        markerStyles.id = 'marker-styles';
+        markerStyles.textContent = `
+            .custom-marker-container {
+                background: none;
+                border: none;
+            }
+            .custom-marker {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                color: white;
+                font-size: 12px;
+                box-shadow: 0 0 4px rgba(0,0,0,0.5);
+                transition: all 0.3s ease;
+            }
+            .custom-marker:hover {
+                transform: scale(1.2);
+                box-shadow: 0 0 8px rgba(0,0,0,0.7);
+            }
+        `;
+        document.head.appendChild(markerStyles);
+    }
     
     return marker;
 }
@@ -1533,12 +1572,79 @@ function addCustomStyles() {
     document.head.appendChild(style);
 }
 
+// 創建動態圖例
+function createDynamicLegend() {
+    const legendContainer = document.getElementById('map-legend-items');
+    if (!legendContainer) return;
+    
+    let legendHTML = '';
+    
+    // 使用資料庫中的地點類型
+    if (window.plltWorldData && window.plltWorldData.categories) {
+        Object.entries(window.plltWorldData.categories).forEach(([type, data]) => {
+            const icon = data.icon || 'fa-map-marker';
+            const color = data.color || '#cccccc';
+            
+            legendHTML += `
+                <div class="legend-item">
+                    <div class="legend-icon" style="background-color: ${color}">
+                        <i class="fa-solid ${icon}"></i>
+                    </div>
+                    <span>${type}</span>
+                </div>
+            `;
+        });
+    } else {
+        // 備用選項，如果資料庫不可用
+        const defaultTypes = [
+            {type: "首都", color: "#e74c3c", icon: "fa-crown"},
+            {type: "城市", color: "#d35400", icon: "fa-city"},
+            {type: "城鎮", color: "#f39c12", icon: "fa-house-chimney"},
+            {type: "要塞", color: "#8e44ad", icon: "fa-shield-halved"},
+            {type: "哨站", color: "#9b59b6", icon: "fa-binoculars"}
+        ];
+        
+        defaultTypes.forEach(item => {
+            legendHTML += `
+                <div class="legend-item">
+                    <div class="legend-icon" style="background-color: ${item.color}">
+                        <i class="fa-solid ${item.icon}"></i>
+                    </div>
+                    <span>${item.type}</span>
+                </div>
+            `;
+        });
+    }
+    
+    legendContainer.innerHTML = legendHTML;
+    
+    // 添加圖例樣式
+    const style = document.createElement('style');
+    style.textContent = `
+        .legend-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+            color: white;
+            font-size: 12px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 // 初始化頁面
 function initializePage() {
     console.log('初始化頁面...');
     
     // 添加自定義樣式
     addCustomStyles();
+    
+    // 創建動態圖例
+    createDynamicLegend();
     
     // 初始化資料同步系統
     initializeDataSync();

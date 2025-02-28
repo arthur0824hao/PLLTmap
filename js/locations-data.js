@@ -6,47 +6,58 @@
 // 地點分類信息 - 定義所有可用的地點類型及其屬性
 const locationCategories = {
     "首都": {
-        color: "#e74c3c",
+        color: "#e74c3c", // 紅色
+        icon: "fa-crown", // 皇冠圖標
         description: "國家或區域的政治中心，通常擁有最完善的基礎設施和防禦系統"
     },
     "城市": {
-        color: "#d35400",
+        color: "#d35400", // 深橘色
+        icon: "fa-city", // 城市圖標
         description: "大型居民聚集地，有完善的商業中心和基礎建設"
     },
     "城鎮": {
-        color: "#f39c12",
+        color: "#f39c12", // 黃色
+        icon: "fa-house-chimney", // 房屋圖標
         description: "中小型居民聚集地，有基本的商業和生活設施"
     },
     "要塞": {
-        color: "#8e44ad",
+        color: "#8e44ad", // 深紫色
+        icon: "fa-shield-halved", // 盾牌圖標
         description: "軍事防禦建築，通常位於戰略要地"
     },
     "哨站": {
-        color: "#9b59b6",
+        color: "#9b59b6", // 淺紫色
+        icon: "fa-binoculars", // 望遠鏡圖標
         description: "邊境或戰略位置的小型防禦或監視站"
     },
     "平原": {
-        color: "#f1c40f",
+        color: "#f1c40f", // 金色
+        icon: "fa-mountain-sun", // 平原圖標
         description: "開闊的平坦地形，適合農耕或行軍"
     },
     "森林": {
-        color: "#2ecc71",
+        color: "#2ecc71", // 綠色
+        icon: "fa-tree", // 樹木圖標
         description: "茂密的樹林，通常有豐富的自然資源和隱匿的生物"
     },
     "山": {
-        color: "#95a5a6",
+        color: "#95a5a6", // 灰色
+        icon: "fa-mountain", // 山峰圖標
         description: "高聳的地形，可能蘊含礦產資源或作為天然屏障"
     },
     "水域": {
-        color: "#3498db",
+        color: "#3498db", // 藍色
+        icon: "fa-water", // 水波圖標
         description: "河流、湖泊等水體，可能蘊含特殊的魔法屬性或神秘生物"
     },
     "秘境": {
-        color: "#e67e22",
+        color: "#e67e22", // 深橙色
+        icon: "fa-dungeon", // 神秘地牢圖標
         description: "神秘且難以到達的地區，常藏有珍寶或古老的知識"
     },
     "自定義": {
-        color: "#1abc9c",
+        color: "#1abc9c", // 青色
+        icon: "fa-map-pin", // 圖釘圖標
         description: "由玩家自行定義的地點類型"
     }
 };

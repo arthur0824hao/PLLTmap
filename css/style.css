@@ -52,17 +52,25 @@ body {
     padding: 10px;
     border-radius: 4px;
     color: white;
+    max-height: 70vh;
+    overflow-y: auto;
 }
 .legend-item {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 .legend-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
+    margin-right: 10px;
+    color: white;
+    font-size: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 /* 標記控制面板樣式 */
 .marker-controls {
@@ -135,9 +143,27 @@ body {
 }
 
 #user-markers-list li {
+    display: flex;
+    align-items: center;
     padding: 8px;
     border-bottom: 1px solid #444;
     cursor: pointer;
+}
+
+.location-type-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    margin-right: 8px;
+    color: white;
+    font-size: 10px;
+}
+
+.location-name {
+    flex-grow: 1;
 }
 
 #user-markers-list li:hover {
@@ -174,4 +200,30 @@ body {
 
 .delete-marker-btn:hover {
     background-color: #c0392b;
+}
+
+/* 圖標標記樣式 */
+.custom-marker-container {
+    background: none;
+    border: none;
+}
+
+.custom-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;      /* 由26px減小到20px */
+    height: 20px;     /* 由26px減小到20px */
+    border-radius: 50%;
+    color: white;
+    font-size: 10px;  /* 由12px減小到10px */
+    box-shadow: 0 0 3px rgba(0,0,0,0.5);
+    border: 1.5px solid white; /* 由2px減小到1.5px */
+    transition: all 0.2s ease;
+}
+
+.custom-marker:hover {
+    transform: scale(1.3);
+    box-shadow: 0 0 8px rgba(0,0,0,0.7);
+    z-index: 1000;    /* 確保懸停時在其他圖標上方 */
 }

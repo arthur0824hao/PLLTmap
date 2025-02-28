@@ -8,6 +8,9 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     
+    <!-- Font Awesome 圖標庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- 自定義CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -17,26 +20,8 @@
     
     <div class="map-legend">
         <h3>圖例</h3>
-        <div class="legend-item">
-            <div class="legend-icon" style="background-color: #e74c3c;"></div>
-            <span>主城</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background-color: #3498db;"></div>
-            <span>水域</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background-color: #2ecc71;"></div>
-            <span>森林</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background-color: #f1c40f;"></div>
-            <span>秘境</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-icon" style="background-color: #9b59b6;"></div>
-            <span>自定義</span>
-        </div>
+        <!-- 圖例會由JavaScript動態生成 -->
+        <div id="map-legend-items"></div>
     </div>
     
     <!-- 標記控制面板 -->
