@@ -189,6 +189,64 @@ L.control.zoom({
     zoomOutTitle: '縮小'
 }).addTo(map);
 
+
+
+// 鍵盤快捷鍵設置
+document.addEventListener('keydown', function(e) {
+    // 按 'a' 鍵啟動添加標記功能
+    if (e.key === 'a' || e.key === 'A') {
+        if (!e.ctrlKey && !e.metaKey && !e.altKey) {  // 確保沒有同時按下修飾鍵
+            e.preventDefault();
+            if (!addingMarker && !measuringDistance) {
+                beginAddMarker();
+                showToast('已啟動添加標記模式，點擊地圖以放置標記');
+            }
+        }
+    }
+    
+    // 按 'e' 或 'E' + Ctrl/Cmd 匯出地點JSON
+    if ((e.key === 'e' || e.key === 'E') && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (window.plltWorldData && window.plltWorldData.getLocationsJson) {
+            const jsonData = window.plltWorldData.getLocationsJson();
+            console.log('========== 複製以下 JSON 到 hardcodedLocations 陣列 ==========');
+            console.log(jsonData);
+            
+            try {
+                navigator.clipboard.writeText(jsonData).then(() => {
+                    showToast('已複製地點 JSON 到剪貼簿！');
+                });
+            } catch (err) {
+                console.error('無法複製到剪貼簿:', err);
+                showToast('請從控制台複製 JSON 資料');
+            }
+        }
+    }
+    
+    // 按 'Esc' 鍵取消當前操作
+    if (e.key === 'Escape') {
+        if (measuringDistance) {
+            cancelMeasuring();
+            showToast('已取消測量模式');
+        } else if (addingMarker) {
+            cancelAddMarker();
+            showToast('已取消添加標記模式');
+        }
+    }
+    
+    // 按 'm' 鍵啟動測量距離功能
+    if (e.key === 'm' || e.key === 'M') {
+        if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            if (!measuringDistance && !addingMarker) {
+                startMeasuring();
+                showToast('已啟動測量模式，點擊地圖以設置測量點');
+            }
+        }
+    }
+});
+
+
 // 添加歸屬信息
 L.control.attribution({
     position: 'bottomright',
@@ -520,38 +578,44 @@ function calculateDistance(point1, point2) {
 
 // 匯出/匯入功能實現
 
-// 匯出標記點為JSON檔案
+// 匯出標記點為JSON檔案 (修改後的版本)
 function exportMarkers() {
     console.log('匯出標記');
     
-    if (window.plltWorldData && window.plltWorldData.locations) {
-        if (window.plltWorldData.locations.length === 0) {
-            alert('沒有標記可供匯出');
-            return;
+    if (window.plltWorldData && window.plltWorldData.getLocationsJson) {
+        // 使用資料庫API取得JSON格式的地點資料
+        const jsonData = window.plltWorldData.getLocationsJson();
+        
+        // 複製到剪貼簿
+        try {
+            navigator.clipboard.writeText(jsonData).then(() => {
+                showToast('已複製地點資料到剪貼簿！');
+                
+                // 同時也提供下載
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'pllt_world_locations.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+        } catch (err) {
+            console.error('無法複製到剪貼簿:', err);
+            
+            // 如果複製失敗，仍提供下載
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'pllt_world_locations.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showToast('已下載地點資料檔案');
         }
-        
-        // 準備匯出的資料 (移除 markerRef)
-        const exportData = window.plltWorldData.locations.map(location => {
-            const { markerRef, ...rest } = location;
-            return rest;
-        });
-        
-        // 創建一個 Blob
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-        
-        // 創建下載連結
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'pllt_world_locations.json';
-        
-        // 觸發下載
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        showToast(`已匯出 ${exportData.length} 個地點`);
     } else {
-        alert('無法匯出：資料庫不可用');
+        alert('無法匯出：資料庫功能不可用');
     }
 }
 
