@@ -10,9 +10,7 @@ body {
     background: #000;
     z-index: 0; /* 明確設定地圖為最底層 */
     position: absolute; /* 確保z-index生效 */
-    touch-action: none !important; /* 確保觸控事件不被瀏覽器攔截 */
 }
-
 .map-title {
     position: absolute;
     top: 10px;
@@ -24,7 +22,6 @@ body {
     border-radius: 4px;
     font-size: 18px;
 }
-
 .location-info {
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
@@ -32,16 +29,13 @@ body {
     padding: 10px;
     max-width: 300px;
 }
-
 .location-info h3 {
     margin: 0 0 5px 0;
     color: #FFD700;
 }
-
 .location-info p {
     margin: 5px 0;
 }
-
 .map-controls {
     position: absolute;
     bottom: 20px;
@@ -52,84 +46,86 @@ body {
     border-radius: 4px;
     color: white;
 }
-
-/* 圖例面板 - 設置為縮進到左側 */
 .map-legend {
-    position: fixed; /* 固定在視窗上 */
-    bottom: 20px;
-    left: -180px; /* 初始位置在屏幕外 */
-    z-index: 900; /* 增加z-index確保在其他元素上方 */
-    background-color: rgba(0, 0, 0, 0.8); /* 加深背景使文字更清晰 */
-    padding: 15px;
-    border-radius: 8px;
-    color: white;
-    max-height: 70vh;
-    overflow-y: auto;
-    width: 180px;
-    min-width: 180px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* 強化陰影 */
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    transform: none; /* 移除縮放效果，讓圖例保持完整尺寸 */
-    display: block !important; /* 修正語法錯誤 */
-    visibility: visible !important; /* 修正語法錯誤 */
-    opacity: 0.95; /* 略微透明 */
-    pointer-events: auto; /* 確保可點擊 */
-    transition: left 0.3s ease; /* 添加過渡效果 */
+    position: fixed !important;
+    bottom: 20px !important;
+    left: -135px !important; /* 修改為-135px，讓它露出約45px (1/4) */
+    z-index: 999 !important; /* 確保不被其他元素覆蓋 */
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    color: white !important;
+    max-height: 70vh !important;
+    width: 180px !important;
+    min-width: 180px !important;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important; /* 添加金色邊框增強可見性 */
+    transition: left 0.3s ease-out !important; /* 改用 ease-out 緩動函數，更自然 */
+    opacity: 0.95 !important;
+    transform: scale(0.75) !important; /* 縮放為原來的0.75倍 */
+    transform-origin: bottom left !important; /* 從左下角縮放 */
+    overflow-y: auto !important;
+    pointer-events: all !important;
+    will-change: left !important; /* 優化性能，提前告知瀏覽器將要改變的屬性 */
 }
 
-/* 圖例懸停時彈出 */
 .map-legend:hover, .map-legend.active {
-    left: 20px;
+    left: 20px !important;
+    /* 保持縮放比例不變，避免滑鼠懸停時抽搐 */
+}
+
+.map-legend::before {
+    content: "圖例" !important;
+    position: absolute !important;
+    right: -45px !important; /* 在面板右側顯示標籤 */
+    top: 50% !important;
+    transform: translateY(-50%) rotate(90deg) !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 5px 10px !important;
+    border-radius: 0 0 8px 8px !important;
+    color: white !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+    border-top: none !important;
+    z-index: -1 !important;
+    pointer-events: none !important; /* 允許鼠標事件穿透，防止觸發懸浮狀態變化 */
 }
 
 .map-legend h3 {
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     color: #FFD700;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    padding-bottom: 8px;
-    font-size: 18px;
-}
-
-#map-legend-items {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    padding-bottom: 5px;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    padding: 5px;
-    border-radius: 5px;
+    margin-bottom: 8px;
+    padding: 3px;
+    border-radius: 3px;
     transition: background-color 0.2s;
-    cursor: pointer; /* 使項目看起來可點擊 */
 }
 
 .legend-item:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .legend-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 26px; 
-    height: 26px;
+    width: 20px; 
+    height: 20px;
     border-radius: 50%;
-    margin-right: 12px;
+    margin-right: 10px;
     color: white;
-    font-size: 12px;
+    font-size: 10px;
     border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
-}
-
-.legend-item span {
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* 添加文字陰影提高可讀性 */
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
 
 /* 修改控制面板行為 */
@@ -137,7 +133,7 @@ body {
     position: absolute;
     top: 20px;
     right: -230px; /* 初始位置在屏幕外 */
-    z-index: 600; /* 控制面板需要較高的z-index */
+    z-index: 900 !important; /* 確保不被其他元素覆蓋 */
     background-color: rgba(0, 0, 0, 0.8);
     padding: 15px;
     border-radius: 4px;
@@ -145,11 +141,19 @@ body {
     width: 250px;
     max-height: 80vh;
     overflow-y: auto;
-    transition: right 0.3s ease;
+    transition: right 0.3s ease-out !important; /* 改用 ease-out 緩動函數 */
+    will-change: right !important; /* 優化性能 */
 }
 
 .marker-controls:hover, .marker-controls.active {
     right: 20px; /* 懸停或激活時顯示 */
+}
+
+/* 面板鎖定狀態樣式 */
+.marker-controls.locked-open {
+    right: 20px !important; /* 確保保持打開 */
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.7) !important; /* 金色陰影指示鎖定狀態 */
+    border: 1px solid rgba(255, 215, 0, 0.7) !important;
 }
 
 .marker-controls h3 {
@@ -192,8 +196,14 @@ body {
     resize: vertical;
 }
 
-/* 刪除未使用的樣式 */
-/* 移除 marker-list-container 和相關樣式 */
+.marker-list-container {
+    margin-top: 15px;
+}
+
+.marker-list-container h4 {
+    color: #FFD700;
+    margin-bottom: 5px;
+}
 
 #user-markers-list {
     list-style: none;
@@ -310,14 +320,6 @@ body {
     z-index: 601; /* 確保切換按鈕在面板上方 */
 }
 
-/* 為圖例添加切換按鈕 */
-.map-legend .panel-toggle {
-    left: auto; /* 覆蓋預設值 */
-    right: -30px; /* 按鈕位於右側 */
-    top: 10px;
-    border-radius: 0 4px 4px 0; /* 圓角在右側 */
-}
-
 .toast-container {
     z-index: 1000; /* Toast最上層 */
 }
@@ -349,67 +351,204 @@ body {
     background-color: #455A64;
 }
 
-/* 添加類別高亮樣式 */
-.legend-item.active {
-    background-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+/* 隱藏所有滾動條 */
+::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
+    background: transparent !important;
 }
 
-/* 圖例提示樣式 */
-.legend-hint {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 10px;
+::-webkit-scrollbar-thumb {
+    background: transparent !important;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+/* Firefox 隱藏滾動條 */
+* {
+    scrollbar-width: none !important;
+}
+
+/* IE 隱藏滾動條 */
+* {
+    -ms-overflow-style: none !important;
+}
+
+/* 過濾器面板樣式 - 懸浮式，向下移動避免與標記面板重疊 */
+.location-type-filter {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    color: white !important;
+    width: 180px !important;
+    font-size: 14px !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    position: absolute !important;
+    right: -135px !important; /* 保持露出約1/4 */
+    top: 200px !important; /* 向下移動，避免與標記面板重疊 */
+    transition: right 0.3s ease !important; /* 只過渡右側位置，防止抽搐 */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+    transform: scale(0.75) !important;
+    transform-origin: center right !important; /* 改為右側中心，減少抽搐 */
+    will-change: right !important; /* 優化性能，提前告知瀏覽器將要改變的屬性 */
+    pointer-events: auto !important; /* 確保可點擊 */
+    visibility: visible !important; /* 確保一定可見 */
+    display: block !important;
+    opacity: 1 !important;
+    z-index: 950 !important; /* 確保層級正確 */
+}
+
+.location-type-filter:hover, .location-type-filter.active, .location-type-filter.hover-active {
+    right: 20px !important; /* 懸停時顯示 */
+}
+
+/* 強化懸停效果，增加視覺回饋 */
+.map-legend:hover, .location-type-filter:hover {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important; /* 金色陰影 */
+}
+
+.location-type-filter .filter-title {
+    font-weight: bold !important;
+    margin-bottom: 8px !important;
+    text-align: center !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding-bottom: 5px !important;
+    color: #FFD700 !important;
+}
+
+.location-type-filter .filter-options label {
+    display: block !important;
+    margin: 5px 0 !important;
+    cursor: pointer !important;
+}
+
+.location-type-filter .filter-options input {
+    margin-right: 5px !important;
+}
+
+/* 添加緩沖區，減少鼠標進出導致的頻繁狀態變化 */
+.buffer-zone {
+    position: absolute !important;
+    width: 15px !important; 
+    height: 100px !important;
+    background: transparent !important;
+    z-index: 898 !important;
+}
+
+.buffer-zone.left {
+    left: -15px !important;
+    top: calc(50% - 50px) !important;
+}
+
+.buffer-zone.right {
+    right: -15px !important;
+    top: calc(50% - 50px) !important;
+}
+
+/* 左下角圖例過濾器整合面板樣式 */
+.legend-filter-panel {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: -135px !important; /* 讓它露出約1/4 */
+    z-index: 950 !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    color: white !important;
+    max-height: 70vh !important;
+    width: 180px !important;
+    min-width: 180px !important;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+    transition: left 0.3s ease-out !important;
+    opacity: 0.95 !important;
+    transform: scale(0.75) !important; /* 縮放為原來的0.75倍 */
+    transform-origin: bottom left !important; /* 從左下角縮放 */
+    overflow-y: auto !important;
+    pointer-events: all !important;
+    will-change: left !important; /* 優化性能 */
+}
+
+.legend-filter-panel:hover, .legend-filter-panel.hover-active {
+    left: 20px !important;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important;
+}
+
+.legend-filter-panel::before {
+    content: "圖例與過濾" !important;
+    position: absolute !important;
+    right: -55px !important; /* 在面板右側顯示標籤 */
+    top: 50% !important;
+    transform: translateY(-50%) rotate(90deg) !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 5px 10px !important;
+    border-radius: 0 0 8px 8px !important;
+    color: white !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+    border-top: none !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+.legend-filter-title {
+    font-weight: bold !important;
+    margin-bottom: 8px !important;
+    text-align: center !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding-bottom: 5px !important;
+    color: #FFD700 !important;
+}
+
+.legend-filter-item {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 6px !important;
+    padding: 3px !important;
+    border-radius: 3px !important;
+    transition: background-color 0.2s !important;
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+.legend-filter-item:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 優化勾選框效果 */
+.legend-filter-panel input[type="checkbox"] {
+    cursor: pointer !important;
+    margin-right: 6px !important;
+    pointer-events: none !important; /* 讓點擊事件穿透到父元素 */
+}
+
+/* 添加防抽搐機制 */
+.buffer-zone.left {
+    position: absolute !important;
+    width: 30px !important; /* 增加寬度 */
+    height: 100px !important;
+    left: -15px !important;
+    top: calc(50% - 50px) !important;
+    background: transparent !important;
+    z-index: 949 !important;
+}
+
+/* 模式指示器樣式 */
+.mode-indicator {
+    padding: 5px;
+    margin-bottom: 10px;
+    border-radius: 4px;
     text-align: center;
-    font-style: italic;
+    animation: pulse-bg 2s infinite;
 }
 
-/* 修正其他語法錯誤 */
-.popup-measure-btn:hover {
-    background-color: #2980b9 !important;
-}
-
-.leaflet-container {
-    cursor: grab !important; /* 確保顯示正確的拖拽游標 */
-}
-
-.leaflet-container:active {
-    cursor: grabbing !important; /* 拖拽中的游標 */
-}
-
-/* 添加自定義游標樣式 */
-
-/* 在添加標記模式下的準心游標 */
-.adding-marker-mode {
-    cursor: crosshair !important;
-}
-
-/* 確保Leaflet容器也遵循游標設置 */
-.adding-marker-mode .leaflet-container {
-    cursor: crosshair !important;
-}
-
-/* 確保所有Leaflet子元素也遵循游標設置 */
-.adding-marker-mode .leaflet-interactive {
-    cursor: crosshair !important;
-}
-
-/* 高亮顯示提示當前可用的面板 */
-.map-legend.active, .marker-controls.active {
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); /* 金色陰影 */
-    border: 1px solid rgba(255, 215, 0, 0.5);
-}
-
-/* 手機適配優化 */
-@media (max-width: 768px) {
-    .map-legend {
-        width: 160px;
-        min-width: 160px;
-        left: -160px;
-    }
-    
-    .marker-controls {
-        width: 200px;
-        right: -200px;
-    }
+@keyframes pulse-bg {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
 }

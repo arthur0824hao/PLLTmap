@@ -233,14 +233,17 @@ function initializePage() {
             
             // 初始化基本UI元素
             if (window.uiModule) {
-                window.uiModule.createDynamicLegend();
+                // window.uiModule.createDynamicLegend(); // 停用舊的圖例功能，修正左下角重複圖例問題
                 window.uiModule.initializeCollapsiblePanels();
+                
+                // 確保創建左下角整合面板
+                window.uiModule.createLegendFilterPanel();
             }
             
-            // 初始化過濾器
-            if (window.filterModule) {
-                window.filterModule.setupLocationFilter();
-            }
+            // 初始化過濾器 - 不再需要單獨的過濾器，使用整合面板替代
+            // if (window.filterModule) {
+            //     window.filterModule.setupLocationFilter();
+            // }
             
             // 顯示初始提示
             if (window.uiModule) {

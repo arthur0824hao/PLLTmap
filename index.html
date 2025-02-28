@@ -18,7 +18,8 @@
     <div id="map"></div>
     <div class="map-title">PLLT World Map</div>
     
-    <div class="map-legend">
+    <!-- 圖例視窗已被隱藏，使用圖例+過濾器整合面板 -->
+    <div class="map-legend" style="display:none;">
         <h3>圖例</h3>
         <!-- 圖例會由JavaScript動態生成 -->
         <div id="map-legend-items"></div>
@@ -52,18 +53,49 @@
             <button id="export-markers-btn">匯出標記</button>
             <button id="import-markers-btn">匯入標記</button>
             <input type="file" id="import-file" accept=".json" style="display:none;">
-            <!-- 移除修復按鈕和提示 -->
+        </div>
+        
+        <div class="marker-list-container">
+            <h4>地點列表</h4>
+            <div class="location-filter">
+                <select id="location-filter">
+                    <option value="all">全部地點</option>
+                </select>
+            </div>
+            <ul id="user-markers-list"></ul>
         </div>
     </div>
     
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     
-    <!-- 系統工具模組 - 整合了日誌、調試和初始化檢查功能 -->
-    <script src="js/system.js"></script>
+    <!-- 日誌系統 - 最先加載以捕獲所有錯誤 -->
+    <script src="js/logger.js"></script>
     
     <!-- 地圖資料庫 - 確保首先加載 -->
     <script src="js/locations-data.js"></script>
+    
+    <!-- 等待短暫時間確保數據庫初始化 -->
+    <script>
+        console.log("確保數據庫已載入: ", window.plltWorldData ? '成功' : '失敗');
+        if (!window.plltWorldData && typeof locationDb !== 'undefined') {
+            console.log("手動初始化 plltWorldData 對象");
+            window.plltWorldData = {
+                locations: locationDb.locations,
+                categories: locationCategories
+            };
+        }
+        
+        // 調試: 輸出所有 hardcodedLocations 位置
+        if (typeof hardcodedLocations !== 'undefined') {
+            console.log(`找到 ${hardcodedLocations.length} 個硬編碼地點:`);
+            hardcodedLocations.forEach((loc, idx) => {
+                console.log(`地點 ${idx+1}: ${loc.name} (${loc.type})`);
+            });
+        } else {
+            console.error("hardcodedLocations 未定義!");
+        }
+    </script>
     
     <!-- UI 模塊 -->
     <script src="js/ui.js"></script>
@@ -73,43 +105,12 @@
     
     <!-- 標記模塊 -->
     <script src="js/markers.js"></script>
-
-    <!-- 過濾模塊 -->
-    <script src="js/filter.js"></script>
     
     <!-- 主要邏輯 -->
     <script src="js/main.js"></script>
     
-    <!-- 等待短暫時間確保數據庫初始化 -->
-    <script>
-        console.log("確保數據庫已載入: ", window.plltWorldData ? '成功' : '失敗');
-        if (!window.plltWorldData && typeof locationDb !== 'undefined') {
-            console.log("手動初始化 plltWorldData 對象");
-            window.plltWorldData = {
-                locations: locationDb.locations,
-                categories: locationCategories,
-                
-                // 提供資料庫操作函數
-                addUserLocation: (data) => locationDb.addLocation(data),
-                updateLocation: (id, data) => locationDb.updateLocation(id, data),
-                deleteLocation: (id) => locationDb.deleteLocation(id),
-                getLocationsByType: (type) => locationDb.getLocationsByType(type),
-                searchLocations: (query) => locationDb.searchLocationsByName(query),
-                getStats: () => locationDb.getStats(),
-                
-                // 匯入/匯出功能
-                importLocations: (data, clearExisting) => locationDb.importLocations(data, clearExisting),
-                getFullDatabase: () => locationDb.getFullDatabase(),
-                getLocationsJson: () => locationDb.getLocationsJson(),
-                
-                // 提供重新加載方法
-                reload: () => {
-                    locationDb.load();
-                    return locationDb.locations;
-                }
-            };
-        }
-    </script>
+    <!-- 初始化檢查工具 -->
+    <script src="js/init-check.js"></script>
     
     <!-- 事件綁定腳本 -->
     <script>
@@ -184,16 +185,12 @@
                         window.markersModule.initializeMapLocations();
                     }
                 }
-                
-                // 執行系統檢查
-                if (window.systemTools && window.systemTools.checker) {
-                    window.systemTools.checker.checkAll();
-                }
-            }, 2000);
+            }, 2000); // 等待2秒確保地圖完全載入
             
-            // 移除修復按鈕相關代碼
-            
-            // 移除可能導致問題的初始提示
+            // 測試日誌系統
+            setTimeout(function() {
+                PLLTLogger.logInfo('系統測試', '日誌系統功能測試');
+            }, 1000);
         });
     </script>
 </body>

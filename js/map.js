@@ -80,36 +80,64 @@ function setupLocationFilter() {
 }
 
 // 處理過濾器變更
-function handleFilterChange(e) {
+function handleFilterChange(e, container) {
     const checkbox = e.target;
     const type = checkbox.dataset.type;
     const checked = checkbox.checked;
     
     if (type === 'all') {
         // 如果切換了"全部"選項，則同步設置所有其他選項
-        const allCheckboxes = document.querySelectorAll('.filter-options input[type="checkbox"]');
+        const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
         allCheckboxes.forEach(cb => {
             cb.checked = checked;
         });
     } else {
         // 如果取消選中任何單獨類型，確保"全部"選項也取消選中
-        const allCheckbox = document.querySelector('input[data-type="all"]');
-        if (!checked && allCheckbox.checked) {
+        const allCheckbox = container.closest('.legend-filter-panel').querySelector('input[data-type="all"]');
+        if (!checked && allCheckbox && allCheckbox.checked) {
             allCheckbox.checked = false;
         }
         
         // 如果所有單獨類型都被選中，確保"全部"選項也被選中
-        const typeCheckboxes = document.querySelectorAll('.filter-options input[type="checkbox"]:not([data-type="all"])');
-        const allTypesChecked = Array.from(typeCheckboxes).every(cb => cb.checked);
-        if (allTypesChecked) {
-            allCheckbox.checked = true;
+        if (container) {
+            const typeCheckboxes = container.querySelectorAll('input[type="checkbox"]:not([data-type="all"])');
+            const allTypesChecked = Array.from(typeCheckboxes).every(cb => cb.checked);
+            if (allTypesChecked && allCheckbox) {
+                allCheckbox.checked = true;
+            }
         }
     }
-    
-    // 應用過濾器
-    applyLocationFilter();
 }
 
+function applyFilterDirectly() {
+    if (!window.plltWorldData || !window.plltWorldData.locations) return;
+    
+    // 獲取所有選中的類型
+    const typeCheckboxes = document.querySelectorAll('.legend-filter-panel .legend-filter-list input[type="checkbox"]');
+    const selectedTypes = Array.from(typeCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.dataset.type);
+    
+    // 遍歷所有地點，根據類型顯示或隱藏
+    window.plltWorldData.locations.forEach(location => {
+        if (location.markerRef) {
+            if (selectedTypes.includes(location.type)) {
+                // 顯示該地點
+                location.markerRef.getElement().style.opacity = '1';
+                location.markerRef.getElement().style.display = 'block';
+            } else {
+                // 隱藏該地點
+                location.markerRef.getElement().style.opacity = '0.3';
+                location.markerRef.getElement().style.display = 'block';
+            }
+        }
+    });
+    
+    // 顯示過濾器應用提示
+    if (window.uiModule && window.uiModule.showToast) {
+        window.uiModule.showToast('已更新顯示的地點類型');
+    }
+}
 // 應用地點類型過濾
 function applyLocationFilter() {
     if (!window.plltWorldData || !window.plltWorldData.locations) return;
@@ -425,6 +453,228 @@ function updateMarkerTypeOptions() {
             });
         }
     }
+}
+
+function createLegendFilterPanel() {
+    // 創建容器，採用絕對定位，固定於地圖邊角
+    const container = document.createElement('div');
+    container.className = 'legend-filter-panel';
+    container.style.position = 'absolute';
+    container.style.bottom = '20px';
+    container.style.left = '-135px'; // 露出約1/4
+    container.style.zIndex = '950';
+    container.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    container.style.padding = '10px';
+    container.style.borderRadius = '8px';
+    container.style.width = '180px';
+    container.style.transition = 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'; // 使用更平滑的過渡曲線
+    container.style.visibility = 'visible';
+    container.style.display = 'block';
+    container.style.opacity = '1';
+    container.style.maxHeight = '70vh';
+    container.style.overflowY = 'auto';
+    container.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
+    container.style.border = '1px solid rgba(255, 215, 0, 0.5)';
+    
+    // 新增：標題
+    const title = document.createElement('div');
+    title.className = 'legend-filter-title';
+    title.textContent = '圖例與過濾器';
+    title.style.fontWeight = 'bold';
+    title.style.textAlign = 'center';
+    title.style.marginBottom = '8px';
+    title.style.color = '#FFD700';
+    title.style.borderBottom = '1px solid rgba(255, 255, 255, 0.3)';
+    title.style.paddingBottom = '5px';
+    container.appendChild(title);
+    
+    // 逐一加入各分類
+    const categories = (window.plltWorldData && window.plltWorldData.categories) || {
+        "首都": { color: "#e74c3c", icon: "fa-crown" },
+        "城市": { color: "#d35400", icon: "fa-city" },
+        "城鎮": { color: "#f39c12", icon: "fa-house-chimney" },
+        "要塞": { color: "#8e44ad", icon: "fa-shield-halved" },
+        "哨站": { color: "#9b59b6", icon: "fa-binoculars" },
+        "平原": { color: "#f1c40f", icon: "fa-mountain-sun" },
+        "森林": { color: "#2ecc71", icon: "fa-tree" },
+        "山": { color: "#95a5a6", icon: "fa-mountain" },
+        "水域": { color: "#3498db", icon: "fa-water" },
+        "秘境": { color: "#e67e22", icon: "fa-dungeon" },
+        "自定義": { color: "#1abc9c", icon: "fa-map-pin" }
+    };
+    
+    // 建立列表
+    const list = document.createElement('div');
+    list.className = 'legend-filter-list';
+    
+    Object.keys(categories).forEach(type => {
+        const item = document.createElement('div');
+        item.className = 'legend-filter-item';
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.marginBottom = '6px';
+        item.style.justifyContent = 'space-between'; // 添加兩端對齊
+        
+        // 左側容器：圖標和文字
+        const leftContainer = document.createElement('div');
+        leftContainer.style.display = 'flex';
+        leftContainer.style.alignItems = 'center';
+        leftContainer.style.flexGrow = '1';
+        
+        // 圖例圖標
+        const iconEl = document.createElement('i');
+        iconEl.className = `fa-solid ${categories[type].icon}`;
+        iconEl.style.backgroundColor = categories[type].color;
+        iconEl.style.width = '20px';
+        iconEl.style.height = '20px';
+        iconEl.style.display = 'inline-flex';
+        iconEl.style.alignItems = 'center';
+        iconEl.style.justifyContent = 'center';
+        iconEl.style.borderRadius = '50%';
+        iconEl.style.fontSize = '10px';
+        iconEl.style.color = 'white';
+        iconEl.style.marginRight = '6px';
+        leftContainer.appendChild(iconEl);
+        
+        // 標籤文字
+        const label = document.createElement('span');
+        label.textContent = type;
+        label.style.fontSize = '12px';
+        label.style.color = 'white';
+        leftContainer.appendChild(label);
+        
+        item.appendChild(leftContainer);
+        
+        // 右側放checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.dataset.type = type;
+        checkbox.checked = true;
+        checkbox.style.marginLeft = '6px';
+        checkbox.style.cursor = 'pointer';
+        
+        // 重要：連接過濾器功能
+        checkbox.addEventListener('change', function(e) {
+            // 修改：使用完整的過濾處理邏輯
+            handleFilterChange(e, list);
+            
+            // 呼叫過濾函數
+            if (window.filterModule && typeof window.filterModule.applyLocationFilter === 'function') {
+                window.filterModule.applyLocationFilter();
+            } else {
+                // 備用：直接實現過濾功能
+                applyFilterDirectly();
+            }
+        });
+        
+        item.appendChild(checkbox);
+        list.appendChild(item);
+    });
+    
+    container.appendChild(list);
+    
+    // 底部加入全選
+    const allContainer = document.createElement('div');
+    allContainer.style.marginTop = '8px';
+    allContainer.style.textAlign = 'center';
+    allContainer.style.display = 'flex';
+    allContainer.style.justifyContent = 'space-between';
+    allContainer.style.alignItems = 'center';
+    
+    const allLabel = document.createElement('span');
+    allLabel.textContent = '全部';
+    allLabel.style.fontSize = '12px';
+    allLabel.style.color = 'white';
+    allLabel.style.fontWeight = 'bold';
+    
+    const allCheckbox = document.createElement('input');
+    allCheckbox.type = 'checkbox';
+    allCheckbox.dataset.type = 'all';
+    allCheckbox.checked = true;
+    allCheckbox.style.cursor = 'pointer';
+    
+    // 重要：全選/取消全選功能
+    allCheckbox.addEventListener('change', function(e) {
+        // 同步所有checkbox狀態
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => { cb.checked = allCheckbox.checked; });
+        
+        // 使用完整的過濾處理邏輯
+        handleFilterChange(e, list);
+        
+        if (window.filterModule && typeof window.filterModule.applyLocationFilter === 'function') {
+            window.filterModule.applyLocationFilter();
+        } else {
+            // 備用：直接實現過濾功能
+            applyFilterDirectly();
+        }
+    });
+    
+    allContainer.appendChild(allLabel);
+    allContainer.appendChild(allCheckbox);
+    container.appendChild(allContainer);
+    
+    // 擴大緩衝區，減少抽搐
+    const bufferZone = document.createElement('div');
+    bufferZone.className = 'buffer-zone left';
+    bufferZone.style.position = 'absolute';
+    bufferZone.style.width = '30px'; // 增加寬度
+    bufferZone.style.height = '200px'; // 增加高度
+    bufferZone.style.left = '-30px'; // 與寬度相匹配
+    bufferZone.style.top = 'calc(50% - 100px)'; // 居中
+    bufferZone.style.background = 'transparent';
+    bufferZone.style.zIndex = '949';
+    container.appendChild(bufferZone);
+    
+    // 添加抽搐防止機制
+    let timer = null;
+    let isActive = false;
+    
+    function activatePanel() {
+        if (isActive) return;
+        clearTimeout(timer);
+        isActive = true;
+        container.style.left = '20px';
+        container.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.6)';
+    }
+    
+    function deactivatePanel() {
+        if (!isActive) return;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            isActive = false;
+            container.style.left = '-135px';
+            container.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
+        }, 300);
+    }
+    
+    container.addEventListener('mouseenter', activatePanel);
+    bufferZone.addEventListener('mouseenter', activatePanel);
+    container.addEventListener('mouseleave', deactivatePanel);
+    
+    // 將整合面板掛載到地圖容器上
+    document.body.appendChild(container);
+    
+    // 添加標識標籤
+    const labelElement = document.createElement('div');
+    labelElement.textContent = "圖例與過濾";
+    labelElement.style.position = 'absolute';
+    labelElement.style.right = '-55px';
+    labelElement.style.top = '50%';
+    labelElement.style.transform = 'translateY(-50%) rotate(90deg)';
+    labelElement.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    labelElement.style.padding = '5px 10px';
+    labelElement.style.borderRadius = '0 0 8px 8px';
+    labelElement.style.color = 'white';
+    labelElement.style.fontSize = '12px';
+    labelElement.style.whiteSpace = 'nowrap';
+    labelElement.style.border = '1px solid rgba(255, 215, 0, 0.5)';
+    labelElement.style.borderTop = 'none';
+    labelElement.style.zIndex = '-1';
+    labelElement.style.pointerEvents = 'none';
+    container.appendChild(labelElement);
+    
+    return container;
 }
 
 

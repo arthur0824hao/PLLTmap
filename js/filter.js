@@ -13,11 +13,39 @@ function setupLocationFilter() {
         return;
     }
     
-    // 創建過濾控制器容器
-    const filterControl = L.control({ position: 'bottomright' });
+    // 創建過濾控制器容器，改為自定義位置避免縱軸重疊
+    const filterControl = L.control({ position: 'custom' }); // 使用自定義位置
+    
+    // 擴展自定義控制器位置
+    L.Control.prototype.setPosition = function (position) {
+        var corner = this._map._controlCorners[position];
+        
+        if (position === 'custom') {
+            // 不將控制元件添加到角落，而是讓它使用絕對定位
+            this._container.style.position = 'absolute'; 
+            return this;
+        }
+        
+        // 正常處理其他位置
+        L.DomUtil.addClass(this._container, 'leaflet-control');
+        if (corner) {
+            corner.appendChild(this._container);
+        }
+        
+        return this;
+    };
     
     filterControl.onAdd = function() {
         const container = L.DomUtil.create('div', 'location-type-filter');
+        
+        // 將容器明確設定右邊定位，移除 left 的設定
+        container.style.top = '200px'; // 下移避免重疊
+        container.style.left = 'auto';  // 清除 left 定位
+        container.style.right = '-135px'; // 保持露出約1/4
+        container.style.visibility = 'visible';
+        container.style.display = 'block';
+        container.style.position = 'absolute';
+        container.style.zIndex = '950';
         
         // 初始化HTML
         let filterHTML = `
@@ -42,6 +70,29 @@ function setupLocationFilter() {
         filterHTML += `</div>`;
         container.innerHTML = filterHTML;
         
+        // 添加緩沖區，減少懸浮時的抽搐
+        const bufferZone = L.DomUtil.create('div', 'buffer-zone right');
+        container.appendChild(bufferZone);
+        
+        // 優化懸浮行為
+        let isTransitioning = false;
+        
+        container.addEventListener('mouseenter', function() {
+            if (isTransitioning) return; // 忽略過渡中的事件
+            this.classList.add('hover-active');
+            isTransitioning = true;
+            setTimeout(() => { isTransitioning = false; }, 400);
+        });
+        
+        container.addEventListener('mouseleave', function() {
+            if (isTransitioning) return; // 忽略過渡中的事件
+            setTimeout(() => {
+                this.classList.remove('hover-active');
+                isTransitioning = true;
+                setTimeout(() => { isTransitioning = false; }, 400);
+            }, 200);
+        });
+        
         // 阻止地圖事件傳播，以便能正常使用控制項
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
@@ -52,6 +103,19 @@ function setupLocationFilter() {
             checkboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', handleFilterChange);
             });
+            
+            // 添加懸停提示
+            const filterTip = document.createElement('div');
+            filterTip.className = 'filter-tip';
+            filterTip.textContent = '滑鼠懸停顯示過濾器';
+            filterTip.style.cssText = 'position: absolute; right: 15px; top: 5px; font-size: 12px; color: #aaa; background-color: rgba(0,0,0,0.6); padding: 3px 6px; border-radius: 3px; pointer-events: none; opacity: 0.7;';
+            document.body.appendChild(filterTip);
+            
+            // 5秒後隱藏提示
+            setTimeout(() => {
+                filterTip.style.opacity = '0';
+                setTimeout(() => filterTip.remove(), 500);
+            }, 5000);
         }, 100);
         
         return container;
@@ -59,37 +123,7 @@ function setupLocationFilter() {
     
     filterControl.addTo(window.map);
     
-    // 添加CSS樣式
-    const style = document.createElement('style');
-    style.textContent = `
-        .location-type-filter {
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 4px;
-            color: white;
-            max-width: 200px;
-            font-size: 14px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .filter-title {
-            font-weight: bold;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-        
-        .filter-options label {
-            display: block;
-            margin: 5px 0;
-            cursor: pointer;
-        }
-        
-        .filter-options input {
-            margin-right: 5px;
-        }
-    `;
-    document.head.appendChild(style);
+    // CSS樣式已移至style.css
 }
 
 // 處理過濾器變更

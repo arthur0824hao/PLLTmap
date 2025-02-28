@@ -1,0 +1,47 @@
+/* 額外的UI優化 */
+
+/* 為懸浮面板統一添加懸停指示效果 */
+.map-legend::after,
+.location-type-filter::after,
+.marker-controls::after {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 30px;
+    background-color: #FFD700;
+    border-radius: 0 3px 3px 0;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.map-legend::after {
+    right: -5px;
+}
+
+.location-type-filter::after {
+    left: -5px;
+}
+
+.marker-controls::after {
+    left: -5px;
+}
+
+.map-legend:hover::after,
+.location-type-filter:hover::after,
+.marker-controls:hover::after {
+    opacity: 0.7;
+}
+
+/* 美化所有懸浮面板 */
+.map-legend,
+.location-type-filter,
+.marker-controls {
+    backdrop-filter: blur(3px) !important; /* 添加模糊效果 */
+}
+
+/* 標記面板在操作模式下高亮指示 */
+.marker-controls.active {
+    border: 1px solid #FFD700 !important;
+}

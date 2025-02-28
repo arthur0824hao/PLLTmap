@@ -9,7 +9,7 @@ let distancePoints = [];
 let distanceMarkers = [];
 let distanceLine = null;
 
-// 開始測量距離
+// 開始測量距離 - 確保面板彈出與鎖定
 function startMeasuring() {
     console.log('開始測量距離');
     
@@ -39,11 +39,34 @@ function startMeasuring() {
     const markerControls = document.querySelector('.marker-controls');
     if (markerControls) {
         markerControls.classList.add('active');
+        markerControls.classList.add('locked-open'); // 添加鎖定狀態
+        
+        // 設置自定義數據屬性標記狀態
+        markerControls.dataset.activeMode = 'measuring';
         
         // 更新切換按鈕
         const toggle = markerControls.querySelector('.panel-toggle');
         if (toggle) {
-            toggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            toggle.innerHTML = '<i class="fas fa-lock"></i>'; // 改為鎖定圖標
+            toggle.title = "面板已鎖定 (測量模式)";
+        }
+        
+        // 添加視覺提示
+        const modeIndicator = document.createElement('div');
+        modeIndicator.className = 'mode-indicator';
+        modeIndicator.innerHTML = '<i class="fas fa-ruler-combined"></i> 距離測量模式';
+        modeIndicator.style.backgroundColor = 'rgba(52, 152, 219, 0.8)';
+        modeIndicator.style.color = 'white';
+        modeIndicator.style.padding = '5px 10px';
+        modeIndicator.style.borderRadius = '4px';
+        modeIndicator.style.marginBottom = '10px';
+        modeIndicator.style.textAlign = 'center';
+        modeIndicator.style.fontSize = '12px';
+        modeIndicator.style.fontWeight = 'bold';
+        
+        // 檢查是否已存在，避免重複添加
+        if (!markerControls.querySelector('.mode-indicator')) {
+            markerControls.insertBefore(modeIndicator, markerControls.firstChild);
         }
     }
     
@@ -53,7 +76,7 @@ function startMeasuring() {
     }
 }
 
-// 取消測量
+// 取消測量 - 解除面板鎖定
 function cancelMeasuring() {
     console.log('取消測量');
     measuringDistance = false;
@@ -72,8 +95,25 @@ function cancelMeasuring() {
         window.map.getContainer().style.cursor = '';
     }
     
-    // 取消操作後，可以讓標記面板收回
-    // 但不主動收回，以免用戶仍需操作
+    // 解除面板鎖定
+    const markerControls = document.querySelector('.marker-controls');
+    if (markerControls) {
+        markerControls.classList.remove('locked-open');
+        markerControls.dataset.activeMode = '';
+        
+        // 恢復原始切換按鈕
+        const toggle = markerControls.querySelector('.panel-toggle');
+        if (toggle) {
+            toggle.innerHTML = '<i class="fas fa-cog"></i>';
+            toggle.title = "";
+        }
+        
+        // 移除模式指示器
+        const modeIndicator = markerControls.querySelector('.mode-indicator');
+        if (modeIndicator) {
+            modeIndicator.remove();
+        }
+    }
     
     // 顯示提示
     if (window.uiModule && window.uiModule.showToast) {

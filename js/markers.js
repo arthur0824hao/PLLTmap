@@ -210,7 +210,7 @@ function updateMarkerTypeOptions() {
     }
 }
 
-// 開始添加標記 - 確保面板彈出
+// 開始添加標記 - 確保面板彈出並保持打開
 function beginAddMarker() {
     console.log('開始添加標記');
     if (window.distanceModule && window.distanceModule.isMeasuring()) {
@@ -231,11 +231,34 @@ function beginAddMarker() {
     const markerControls = document.querySelector('.marker-controls');
     if (markerControls) {
         markerControls.classList.add('active');
+        markerControls.classList.add('locked-open'); // 添加鎖定狀態
+        
+        // 設置自定義數據屬性標記狀態
+        markerControls.dataset.activeMode = 'adding-marker';
         
         // 更新切換按鈕
         const toggle = markerControls.querySelector('.panel-toggle');
         if (toggle) {
-            toggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            toggle.innerHTML = '<i class="fas fa-lock"></i>'; // 改為鎖定圖標
+            toggle.title = "面板已鎖定 (添加標記模式)";
+        }
+        
+        // 添加視覺提示
+        const modeIndicator = document.createElement('div');
+        modeIndicator.className = 'mode-indicator';
+        modeIndicator.innerHTML = '<i class="fas fa-map-marker-alt"></i> 添加標記模式';
+        modeIndicator.style.backgroundColor = 'rgba(46, 204, 113, 0.8)';
+        modeIndicator.style.color = 'white';
+        modeIndicator.style.padding = '5px 10px';
+        modeIndicator.style.borderRadius = '4px';
+        modeIndicator.style.marginBottom = '10px';
+        modeIndicator.style.textAlign = 'center';
+        modeIndicator.style.fontSize = '12px';
+        modeIndicator.style.fontWeight = 'bold';
+        
+        // 檢查是否已存在，避免重複添加
+        if (!markerControls.querySelector('.mode-indicator')) {
+            markerControls.insertBefore(modeIndicator, markerControls.firstChild);
         }
     }
     
@@ -317,7 +340,7 @@ function handleDescriptionInputEnter(e) {
     }
 }
 
-// 取消添加標記 - 允許面板縮回
+// 取消添加標記 - 解除面板鎖定
 function cancelAddMarker() {
     console.log('取消添加標記');
     addingMarker = false;
@@ -331,11 +354,28 @@ function cancelAddMarker() {
         window.map.getContainer().classList.remove('adding-marker-mode');
     }
     
-    // 取消操作後，可以讓標記面板收回
-    // 但不主動收回，以免用戶仍需操作
+    // 解除面板鎖定
+    const markerControls = document.querySelector('.marker-controls');
+    if (markerControls) {
+        markerControls.classList.remove('locked-open');
+        markerControls.dataset.activeMode = '';
+        
+        // 恢復原始切換按鈕
+        const toggle = markerControls.querySelector('.panel-toggle');
+        if (toggle) {
+            toggle.innerHTML = '<i class="fas fa-cog"></i>';
+            toggle.title = "";
+        }
+        
+        // 移除模式指示器
+        const modeIndicator = markerControls.querySelector('.mode-indicator');
+        if (modeIndicator) {
+            modeIndicator.remove();
+        }
+    }
 }
 
-// 保存標記
+// 保存標記 - 保存後解除面板鎖定
 function saveMarker() {
     console.log('保存標記');
     const markerForm = document.getElementById('marker-form');
@@ -387,13 +427,33 @@ function saveMarker() {
         alert('保存失敗：無法訪問資料庫');
     }
     
-    // 重設界面
+    // 重設界面並解除面板鎖定
     addingMarker = false;
     document.getElementById('add-marker-btn').style.display = 'block';
     document.getElementById('cancel-marker-btn').style.display = 'none';
     markerForm.style.display = 'none';
     if (window.map) {
         window.map.getContainer().style.cursor = '';
+    }
+    
+    // 解除面板鎖定
+    const markerControls = document.querySelector('.marker-controls');
+    if (markerControls) {
+        markerControls.classList.remove('locked-open');
+        markerControls.dataset.activeMode = '';
+        
+        // 恢復原始切換按鈕
+        const toggle = markerControls.querySelector('.panel-toggle');
+        if (toggle) {
+            toggle.innerHTML = '<i class="fas fa-cog"></i>';
+            toggle.title = "";
+        }
+        
+        // 移除模式指示器
+        const modeIndicator = markerControls.querySelector('.mode-indicator');
+        if (modeIndicator) {
+            modeIndicator.remove();
+        }
     }
 }
 
