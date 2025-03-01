@@ -565,3 +565,8 @@ body {
     transform: translateZ(0) !important; /* 強制GPU加速 */
     transition: none !important; /* 防止子元素單獨過渡 */
 }
+
+/* 隱藏右下角的 Map data © PLLT World 版權信息 */
+.leaflet-control-attribution {
+    display: none !important;
+}

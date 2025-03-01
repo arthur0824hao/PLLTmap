@@ -390,20 +390,13 @@ function applyFilterDirectly() {
         .filter(cb => cb.checked)
         .map(cb => cb.dataset.type);
     
-    // 計算過濾前後的數量
-    let totalCount = 0;
-    let visibleCount = 0;
-    
     // 遍歷所有地點，根據類型顯示或隱藏
     window.plltWorldData.locations.forEach(location => {
         if (location.markerRef) {
-            totalCount++;
-            
             if (selectedTypes.includes(location.type)) {
                 // 完全顯示該地點
                 location.markerRef.getElement().style.opacity = '1';
                 location.markerRef.getElement().style.display = 'block';
-                visibleCount++;
             } else {
                 // 完全隱藏該地點
                 location.markerRef.getElement().style.opacity = '0';
@@ -412,10 +405,8 @@ function applyFilterDirectly() {
         }
     });
     
-    // 顯示過濾器應用提示，包括數量統計
-    if (window.uiModule && window.uiModule.showToast) {
-        window.uiModule.showToast(`顯示 ${visibleCount}/${totalCount} 個地點`);
-    }
+    // 移除顯示過濾器應用提示
+    // 原有的代碼已移除
 }
 
 // 防止懸浮抽搐問題的函數 (從 hover-fix.js 整合)
