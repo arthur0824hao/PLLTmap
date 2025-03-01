@@ -51,8 +51,6 @@
         <div class="data-tools">
             <h4>資料管理</h4>
             <button id="export-markers-btn">匯出標記</button>
-            <button id="import-markers-btn">匯入標記</button>
-            <input type="file" id="import-file" accept=".json" style="display:none;">
         </div>
         
         <!-- 搜索工具 -->
@@ -165,12 +163,6 @@
                     }
                 });
             }
-            
-            const importBtn = document.getElementById('import-markers-btn');
-            if (importBtn) importBtn.addEventListener('click', () => document.getElementById('import-file').click());
-            
-            const importFile = document.getElementById('import-file');
-            if (importFile) importFile.addEventListener('change', (event) => window.markersModule?.handleFileImport(event));
         }
         
         // 全局事件綁定
