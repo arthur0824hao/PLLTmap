@@ -87,28 +87,28 @@ function initializeMap() {
     return window.map;
 }
 
-// 設置基本事件處理
+// 將基本事件處理邏輯抽取為可重用函數
 function setupBasicEvents() {
-    // 確保地圖容器可以正確處理事件
-    if (window.map) {
-        // 點擊事件
-        window.map.on('click', function(e) {
-            console.log('地圖點擊', e.latlng);
-            
-            // 標記模式
-            if (window.markersModule && window.markersModule.isAddingMarker()) {
-                showMarkerForm(e.latlng);
-            } 
-            // 測量模式
-            else if (window.distanceModule && window.distanceModule.isMeasuring()) {
-                window.distanceModule.addDistancePoint(e.latlng);
-            }
-        });
-        
-        // 彈出窗口事件
-        window.map.on('popupopen', function(e) {
-            handlePopupOpen(e);
-        });
+    if (!window.map) return;
+    
+    // 點擊事件處理
+    window.map.on('click', handleMapClick);
+    
+    // 彈出窗口事件
+    window.map.on('popupopen', handlePopupOpen);
+}
+
+// 抽取出地圖點擊處理邏輯
+function handleMapClick(e) {
+    console.log('地圖點擊', e.latlng);
+    
+    // 標記模式
+    if (window.markersModule && window.markersModule.isAddingMarker()) {
+        showMarkerForm(e.latlng);
+    } 
+    // 測量模式
+    else if (window.distanceModule && window.distanceModule.isMeasuring()) {
+        window.distanceModule.addDistancePoint(e.latlng);
     }
 }
 

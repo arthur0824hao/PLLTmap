@@ -210,7 +210,7 @@ function updateMarkerTypeOptions() {
     }
 }
 
-// 開始添加標記 - 確保面板彈出並保持打開
+// 開始添加標記 - 使用通用面板函數
 function beginAddMarker() {
     console.log('開始添加標記');
     if (window.distanceModule && window.distanceModule.isMeasuring()) {
@@ -227,39 +227,16 @@ function beginAddMarker() {
         mapContainer.classList.add('adding-marker-mode');
     }
     
-    // 確保控制面板保持彈出
+    // 使用通用函數設置面板狀態
     const markerControls = document.querySelector('.marker-controls');
-    if (markerControls) {
-        markerControls.classList.add('active');
-        markerControls.classList.add('locked-open'); // 添加鎖定狀態
-        
-        // 設置自定義數據屬性標記狀態
-        markerControls.dataset.activeMode = 'adding-marker';
-        
-        // 更新切換按鈕
-        const toggle = markerControls.querySelector('.panel-toggle');
-        if (toggle) {
-            toggle.innerHTML = '<i class="fas fa-lock"></i>'; // 改為鎖定圖標
-            toggle.title = "面板已鎖定 (添加標記模式)";
-        }
-        
-        // 添加視覺提示
-        const modeIndicator = document.createElement('div');
-        modeIndicator.className = 'mode-indicator';
-        modeIndicator.innerHTML = '<i class="fas fa-map-marker-alt"></i> 添加標記模式';
-        modeIndicator.style.backgroundColor = 'rgba(46, 204, 113, 0.8)';
-        modeIndicator.style.color = 'white';
-        modeIndicator.style.padding = '5px 10px';
-        modeIndicator.style.borderRadius = '4px';
-        modeIndicator.style.marginBottom = '10px';
-        modeIndicator.style.textAlign = 'center';
-        modeIndicator.style.fontSize = '12px';
-        modeIndicator.style.fontWeight = 'bold';
-        
-        // 檢查是否已存在，避免重複添加
-        if (!markerControls.querySelector('.mode-indicator')) {
-            markerControls.insertBefore(modeIndicator, markerControls.firstChild);
-        }
+    if (markerControls && window.uiModule && window.uiModule.setupPanelState) {
+        window.uiModule.setupPanelState(
+            markerControls,
+            'adding-marker',
+            '<i class="fas fa-map-marker-alt"></i> 添加標記模式',
+            'rgba(46, 204, 113, 0.8)',
+            true // 鎖定面板
+        );
     }
     
     // 更新標記類型選項
@@ -340,7 +317,7 @@ function handleDescriptionInputEnter(e) {
     }
 }
 
-// 取消添加標記 - 解除面板鎖定
+// 取消添加標記 - 使用通用面板函數
 function cancelAddMarker() {
     console.log('取消添加標記');
     addingMarker = false;
@@ -354,24 +331,16 @@ function cancelAddMarker() {
         window.map.getContainer().classList.remove('adding-marker-mode');
     }
     
-    // 解除面板鎖定
+    // 使用通用函數解除面板鎖定
     const markerControls = document.querySelector('.marker-controls');
-    if (markerControls) {
-        markerControls.classList.remove('locked-open');
-        markerControls.dataset.activeMode = '';
-        
-        // 恢復原始切換按鈕
-        const toggle = markerControls.querySelector('.panel-toggle');
-        if (toggle) {
-            toggle.innerHTML = '<i class="fas fa-cog"></i>';
-            toggle.title = "";
-        }
-        
-        // 移除模式指示器
-        const modeIndicator = markerControls.querySelector('.mode-indicator');
-        if (modeIndicator) {
-            modeIndicator.remove();
-        }
+    if (markerControls && window.uiModule && window.uiModule.setupPanelState) {
+        window.uiModule.setupPanelState(
+            markerControls,
+            '',
+            '',
+            '',
+            false // 解除鎖定
+        );
     }
 }
 
@@ -535,6 +504,7 @@ function exportMarkers() {
     // 防止重複點擊，添加鎖定機制
     if (window._exporting) {
         console.log('匯出操作正在進行中，請稍候');
+        window.uiModule?.showToast('匯出操作正在進行中，請稍候');
         return;
     }
     
@@ -558,7 +528,7 @@ function exportMarkers() {
             
             // 檢查數據是否存在
             if (exportData.length === 0) {
-                window.uiModule.showToast('沒有標記可供匯出');
+                window.uiModule?.showToast('沒有標記可供匯出');
                 window._exporting = false;
                 return;
             }
@@ -582,7 +552,8 @@ ${formattedArray}
 `;
             
             // 直接下載為文本文件，避免重複建立元素
-            const url = URL.createObjectURL(new Blob([fileContent], { type: 'text/javascript' }));
+            const blob = new Blob([fileContent], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
             const filename = `pllt_locations_export_${exportData.length}_${new Date().toISOString().split('T')[0]}.js`;
             
             // 使用現有的下載連結或建立新的
@@ -603,7 +574,7 @@ ${formattedArray}
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             
             // 顯示成功訊息
-            window.uiModule.showToast(`已下載 ${exportData.length} 個標記，可直接複製到 locations-data.js`);
+            window.uiModule?.showToast(`已下載 ${exportData.length} 個標記，可直接複製到 locations-data.js`);
             
             // 在控制台也輸出格式化內容，作為備份
             console.log('=========== 可複製到 hardcodedLocations 的格式化代碼 ===========');
@@ -612,7 +583,7 @@ ${formattedArray}
             
         } catch (error) {
             console.error('匯出標記時出錯:', error);
-            window.uiModule.showToast('匯出失敗，請檢查控制台獲取更多信息');
+            window.uiModule?.showToast('匯出失敗，請檢查控制台獲取更多信息');
             
             // 顯示應急使用方式
             console.log('=== 匯出失敗，請嘗試以下指令 ===');
@@ -626,7 +597,7 @@ console.log(JSON.stringify(exportData, null, 2));`);
             window._exporting = false;
         }
     } else {
-        window.uiModule.showToast('無法匯出：找不到標記數據');
+        window.uiModule?.showToast('無法匯出：找不到標記數據');
         console.error('找不到 plltWorldData.locations 數據');
         window._exporting = false;
     }
@@ -725,6 +696,11 @@ function handleMapClick(e) {
     // 保存坐標
     markerForm.dataset.lat = e.latlng.lat;
     markerForm.dataset.lng = e.latlng.lng;
+    
+    // 添加使用者體驗增強：自動聚焦名稱輸入框
+    setTimeout(() => {
+        document.getElementById('marker-name').focus();
+    }, 100);
 }
 
 // 導出模塊
@@ -735,10 +711,9 @@ window.markersModule = {
     cancelAddMarker,
     saveMarker,
     deleteLocation,
-    initializeFilter,
     exportMarkers,
     handleFileImport,
-    handleMapClick, // 確保此函數存在
+    handleMapClick,
     showMarkerForm,
     updateMarkerTypeOptions,
     handleDescriptionInputEnter,

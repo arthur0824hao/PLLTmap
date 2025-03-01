@@ -9,7 +9,7 @@ let distancePoints = [];
 let distanceMarkers = [];
 let distanceLine = null;
 
-// 開始測量距離 - 確保面板彈出與鎖定
+// 開始測量距離 - 使用通用面板函數
 function startMeasuring() {
     console.log('開始測量距離');
     
@@ -35,39 +35,16 @@ function startMeasuring() {
         window.map.getContainer().style.cursor = 'crosshair';
     }
     
-    // 確保控制面板保持彈出
+    // 使用通用函數鎖定面板
     const markerControls = document.querySelector('.marker-controls');
-    if (markerControls) {
-        markerControls.classList.add('active');
-        markerControls.classList.add('locked-open'); // 添加鎖定狀態
-        
-        // 設置自定義數據屬性標記狀態
-        markerControls.dataset.activeMode = 'measuring';
-        
-        // 更新切換按鈕
-        const toggle = markerControls.querySelector('.panel-toggle');
-        if (toggle) {
-            toggle.innerHTML = '<i class="fas fa-lock"></i>'; // 改為鎖定圖標
-            toggle.title = "面板已鎖定 (測量模式)";
-        }
-        
-        // 添加視覺提示
-        const modeIndicator = document.createElement('div');
-        modeIndicator.className = 'mode-indicator';
-        modeIndicator.innerHTML = '<i class="fas fa-ruler-combined"></i> 距離測量模式';
-        modeIndicator.style.backgroundColor = 'rgba(52, 152, 219, 0.8)';
-        modeIndicator.style.color = 'white';
-        modeIndicator.style.padding = '5px 10px';
-        modeIndicator.style.borderRadius = '4px';
-        modeIndicator.style.marginBottom = '10px';
-        modeIndicator.style.textAlign = 'center';
-        modeIndicator.style.fontSize = '12px';
-        modeIndicator.style.fontWeight = 'bold';
-        
-        // 檢查是否已存在，避免重複添加
-        if (!markerControls.querySelector('.mode-indicator')) {
-            markerControls.insertBefore(modeIndicator, markerControls.firstChild);
-        }
+    if (markerControls && window.uiModule && window.uiModule.setupPanelState) {
+        window.uiModule.setupPanelState(
+            markerControls,
+            'measuring',
+            '<i class="fas fa-ruler-combined"></i> 距離測量模式',
+            'rgba(52, 152, 219, 0.8)',
+            true // 鎖定面板
+        );
     }
     
     // 顯示提示
@@ -76,7 +53,7 @@ function startMeasuring() {
     }
 }
 
-// 取消測量 - 解除面板鎖定
+// 取消測量 - 使用通用面板函數
 function cancelMeasuring() {
     console.log('取消測量');
     measuringDistance = false;
@@ -95,24 +72,16 @@ function cancelMeasuring() {
         window.map.getContainer().style.cursor = '';
     }
     
-    // 解除面板鎖定
+    // 使用通用函數解除面板鎖定
     const markerControls = document.querySelector('.marker-controls');
-    if (markerControls) {
-        markerControls.classList.remove('locked-open');
-        markerControls.dataset.activeMode = '';
-        
-        // 恢復原始切換按鈕
-        const toggle = markerControls.querySelector('.panel-toggle');
-        if (toggle) {
-            toggle.innerHTML = '<i class="fas fa-cog"></i>';
-            toggle.title = "";
-        }
-        
-        // 移除模式指示器
-        const modeIndicator = markerControls.querySelector('.mode-indicator');
-        if (modeIndicator) {
-            modeIndicator.remove();
-        }
+    if (markerControls && window.uiModule && window.uiModule.setupPanelState) {
+        window.uiModule.setupPanelState(
+            markerControls,
+            '',
+            '',
+            '',
+            false // 解除鎖定
+        );
     }
     
     // 顯示提示

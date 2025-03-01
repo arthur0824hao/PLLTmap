@@ -106,118 +106,130 @@
     
     <!-- 事件綁定腳本 -->
     <script>
-        // 等待頁面加載後，綁定所有事件
-        document.addEventListener('DOMContentLoaded', function() {
-            // 標記相關按鈕
-            document.getElementById('add-marker-btn').addEventListener('click', function() {
-                if (window.markersModule) window.markersModule.beginAddMarker();
-            });
+        // 統一事件綁定函數
+        function bindUIEvents() {
+            // 將不同類型的事件綁定分組處理
+            bindMarkerEvents();
+            bindMeasurementEvents();
+            bindDataManagementEvents();
+            bindGlobalEvents();
             
-            document.getElementById('cancel-marker-btn').addEventListener('click', function() {
-                if (window.markersModule) window.markersModule.cancelAddMarker();
-            });
+            // 檢查標記加載
+            setTimeout(checkMarkersLoaded, 2000);
+        }
+        
+        // 標記相關事件綁定
+        function bindMarkerEvents() {
+            const addBtn = document.getElementById('add-marker-btn');
+            if (addBtn) addBtn.addEventListener('click', () => window.markersModule?.beginAddMarker());
             
-            document.getElementById('save-marker-btn').addEventListener('click', function() {
-                if (window.markersModule) window.markersModule.saveMarker();
-            });
+            const cancelBtn = document.getElementById('cancel-marker-btn');
+            if (cancelBtn) cancelBtn.addEventListener('click', () => window.markersModule?.cancelAddMarker());
             
-            // 距離測量相關按鈕
-            document.getElementById('measure-distance-btn').addEventListener('click', function() {
-                if (window.distanceModule) window.distanceModule.startMeasuring();
-            });
+            const saveBtn = document.getElementById('save-marker-btn');
+            if (saveBtn) saveBtn.addEventListener('click', () => window.markersModule?.saveMarker());
+        }
+        
+        // 測量相關事件綁定
+        function bindMeasurementEvents() {
+            const measureBtn = document.getElementById('measure-distance-btn');
+            if (measureBtn) measureBtn.addEventListener('click', () => window.distanceModule?.startMeasuring());
             
-            document.getElementById('cancel-measure-btn').addEventListener('click', function() {
-                if (window.distanceModule) window.distanceModule.cancelMeasuring();
-            });
-            
-            // 匯入/匯出相關按鈕
-            document.getElementById('export-markers-btn').addEventListener('click', function() {
-                if (window.markersModule) window.markersModule.exportMarkers();
-            });
-            
-            document.getElementById('import-markers-btn').addEventListener('click', function() {
-                document.getElementById('import-file').click();
-            });
-            
-            document.getElementById('import-file').addEventListener('change', function(event) {
-                if (window.markersModule) window.markersModule.handleFileImport(event);
-            });
-            
-            // 添加一個備用的地圖點擊處理機制
-            document.getElementById('map').addEventListener('click', function(e) {
-                // 只有在點擊是直接發生在地圖元素上時才處理
-                if (e.target === this || e.target.classList.contains('leaflet-container')) {
-                    console.log('地圖元素接收到點擊');
-                    
-                    // 檢測是否為添加標記模式
-                    if (window.markersModule && window.markersModule.isAddingMarker()) {
-                        // 使用特殊方法處理
-                        setTimeout(function() {
-                            const mapCenter = window.map.getCenter();
-                            window.uiModule.showToast('請點擊地圖任意位置');
-                        }, 100);
-                    }
-                }
-            });
-            
-            // 最終檢查: 確保標記被加載
-            setTimeout(function() {
-                console.log("最終檢查: 確保標記顯示");
-                
-                // 如果地圖上沒有顯示標記，強制重新初始化
-                if (window.map && window.markersModule && 
-                    window.plltWorldData && window.plltWorldData.locations && 
-                    window.plltWorldData.locations.length > 0) {
-                    
-                    const visibleMarkers = document.querySelectorAll('.custom-marker-container').length;
-                    console.log(`檢測到 ${visibleMarkers} 個可見標記點 (資料庫中有 ${window.plltWorldData.locations.length} 個位置)`);
-                    
-                    if (visibleMarkers === 0) {
-                        console.log("未檢測到可見標記，強制重新初始化...");
-                        window.markersModule.initializeMapLocations();
-                    }
-                }
-            }, 2000); // 等待2秒確保地圖完全載入
-            
-            // 測試日誌系統
-            setTimeout(function() {
-                PLLTLogger.logInfo('系統測試', '日誌系統功能測試');
-            }, 1000);
-            
-            // 匯入/匯出相關按鈕 - 修復事件綁定
+            const cancelMeasureBtn = document.getElementById('cancel-measure-btn');
+            if (cancelMeasureBtn) cancelMeasureBtn.addEventListener('click', () => window.distanceModule?.cancelMeasuring());
+        }
+        
+        // 數據管理事件綁定
+        function bindDataManagementEvents() {
             const exportBtn = document.getElementById('export-markers-btn');
             if (exportBtn) {
-                // 移除可能的舊事件監聽器
-                exportBtn.removeEventListener('click', function(){});
-                
-                // 添加新的監聽器
-                exportBtn.addEventListener('click', function() {
+                exportBtn.addEventListener('click', () => {
                     console.log('點擊匯出按鈕');
-                    if (window.markersModule && typeof window.markersModule.exportMarkers === 'function') {
+                    if (window.markersModule?.exportMarkers) {
                         window.markersModule.exportMarkers();
                     } else {
                         console.error('找不到匯出功能');
-                        alert('匯出功能不可用，請使用控制台方法');
+                        window.uiModule?.showToast('匯出功能不可用');
                         console.log('請在控制台運行: copy(JSON.stringify(plltWorldData.locations.map(loc => {const {markerRef, ...data} = loc; return data;}), null, 2))');
                     }
                 });
-                console.log('匯出按鈕事件已重新綁定');
             }
             
-            // 添加快速匯出鍵盤快捷鍵
-            document.addEventListener('keydown', function(e) {
-                // Ctrl+Shift+E 快速匯出所有標記
-                if (e.ctrlKey && e.shiftKey && (e.key === 'e' || e.key === 'E')) {
-                    e.preventDefault();
-                    console.log('使用鍵盤快捷鍵匯出');
-                    if (window.markersModule && typeof window.markersModule.exportMarkers === 'function') {
-                        window.markersModule.exportMarkers();
-                    } else {
-                        console.log('請在控制台運行: copy(JSON.stringify(plltWorldData.locations.map(loc => {const {markerRef, ...data} = loc; return data;}), null, 2))');
-                    }
+            const importBtn = document.getElementById('import-markers-btn');
+            if (importBtn) importBtn.addEventListener('click', () => document.getElementById('import-file').click());
+            
+            const importFile = document.getElementById('import-file');
+            if (importFile) importFile.addEventListener('change', (event) => window.markersModule?.handleFileImport(event));
+        }
+        
+        // 全局事件綁定
+        function bindGlobalEvents() {
+            // 鍵盤快捷鍵
+            document.addEventListener('keydown', handleKeyboardShortcuts);
+            
+            // 地圖元素備用點擊處理
+            const mapElement = document.getElementById('map');
+            if (mapElement) {
+                mapElement.addEventListener('click', handleBackupMapClick);
+            }
+        }
+        
+        // 鍵盤快捷鍵處理
+        function handleKeyboardShortcuts(e) {
+            // Ctrl+Shift+E 快速匯出所有標記
+            if (e.ctrlKey && e.shiftKey && (e.key === 'e' || e.key === 'E')) {
+                e.preventDefault();
+                console.log('使用鍵盤快捷鍵匯出');
+                if (window.markersModule?.exportMarkers) {
+                    window.markersModule.exportMarkers();
+                } else {
+                    window.uiModule?.showToast('匯出功能不可用');
                 }
-            });
-        });
+            }
+            
+            // ESC 鍵取消當前操作
+            if (e.key === 'Escape') {
+                if (window.distanceModule?.isMeasuring()) {
+                    window.distanceModule.cancelMeasuring();
+                } else if (window.markersModule?.isAddingMarker()) {
+                    window.markersModule.cancelAddMarker();
+                }
+            }
+        }
+        
+        // 地圖元素備用點擊處理
+        function handleBackupMapClick(e) {
+            // 只有在點擊是直接發生在地圖元素上時才處理
+            if (e.target === this || e.target.classList.contains('leaflet-container')) {
+                console.log('地圖元素接收到點擊');
+                
+                // 檢測是否為添加標記模式
+                if (window.markersModule && window.markersModule.isAddingMarker()) {
+                    setTimeout(() => window.uiModule?.showToast('請點擊地圖任意位置'), 100);
+                }
+            }
+        }
+        
+        // 檢查標記加載狀態
+        function checkMarkersLoaded() {
+            console.log("最終檢查: 確保標記顯示");
+            
+            // 如果地圖上沒有顯示標記，強制重新初始化
+            if (window.map && window.markersModule && 
+                window.plltWorldData?.locations?.length > 0) {
+                
+                const visibleMarkers = document.querySelectorAll('.custom-marker-container').length;
+                console.log(`檢測到 ${visibleMarkers} 個可見標記點 (資料庫中有 ${window.plltWorldData.locations.length} 個位置)`);
+                
+                if (visibleMarkers === 0) {
+                    console.log("未檢測到可見標記，強制重新初始化...");
+                    window.markersModule.initializeMapLocations();
+                }
+            }
+        }
+        
+        // 頁面加載完成後執行綁定
+        document.addEventListener('DOMContentLoaded', bindUIEvents);
     </script>
 </body>
 </html>

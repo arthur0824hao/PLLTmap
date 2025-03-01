@@ -238,43 +238,84 @@ function createLegendFilterPanel() {
     const bufferZone = document.createElement('div');
     bufferZone.className = 'buffer-zone left';
     bufferZone.style.position = 'absolute';
-    bufferZone.style.width = '30px'; // 增加寬度
-    bufferZone.style.height = '300px'; // 增加高度
-    bufferZone.style.left = '-30px'; // 與寬度相匹配
-    bufferZone.style.top = 'calc(50% - 150px)'; // 居中
+    bufferZone.style.width = '50px'; // 增加寬度，從30px到50px
+    bufferZone.style.height = '400px'; // 增加高度，從300px到400px
+    bufferZone.style.left = '-50px'; // 與寬度相匹配
+    bufferZone.style.top = 'calc(50% - 200px)'; // 居中
     bufferZone.style.background = 'transparent';
     bufferZone.style.zIndex = '949';
     container.appendChild(bufferZone);
     
-    // 優化懸浮行為 - 使用計時器和狀態管理
+    // 優化懸浮行為 - 增強防抽搐機制
     let hoverTimer = null;
     let leaveTimer = null;
     let isActive = false;
+    let isTransitioning = false; // 添加過渡狀態標記
     
     function activatePanel() {
-        if (isActive) return;
+        if (isActive || isTransitioning) return; // 如果已經活躍或正在過渡中則忽略
         clearTimeout(leaveTimer); // 清除離開計時器
         
+        isTransitioning = true; // 標記開始過渡
         isActive = true;
         container.style.left = '20px';
         container.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.6)';
+        
+        // 過渡完成後重置過渡狀態
+        setTimeout(() => {
+            isTransitioning = false;
+        }, 350); // 略長於CSS過渡時間
     }
     
     function deactivatePanel() {
-        if (!isActive) return;
+        if (!isActive || isTransitioning) return; // 如果未活躍或正在過渡中則忽略
         clearTimeout(hoverTimer); // 清除懸停計時器
         
-        // 添加延時，防止意外的鼠標移出
+        // 添加延時，防止意外的鼠標移出 - 顯著增加延遲時間
         leaveTimer = setTimeout(() => {
+            isTransitioning = true; // 標記開始過渡
             isActive = false;
             container.style.left = '-135px';
             container.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
-        }, 300);
+            
+            // 過渡完成後重置過渡狀態
+            setTimeout(() => {
+                isTransitioning = false;
+            }, 350); // 略長於CSS過渡時間
+        }, 800); // 大幅增加延遲時間，從300ms增加到800ms
     }
     
+    // 為緩衝區添加移入移出事件，比面板本身反應更靈敏
     container.addEventListener('mouseenter', activatePanel);
     bufferZone.addEventListener('mouseenter', activatePanel);
     container.addEventListener('mouseleave', deactivatePanel);
+    
+    // 添加額外的垂直緩衝區，防止從上下方移出時的抽搐問題
+    const topBufferZone = document.createElement('div');
+    topBufferZone.className = 'buffer-zone top';
+    topBufferZone.style.position = 'absolute';
+    topBufferZone.style.width = '100%';
+    topBufferZone.style.height = '20px';
+    topBufferZone.style.left = '0';
+    topBufferZone.style.top = '-20px';
+    topBufferZone.style.background = 'transparent';
+    topBufferZone.style.zIndex = '949';
+    container.appendChild(topBufferZone);
+    
+    const bottomBufferZone = document.createElement('div');
+    bottomBufferZone.className = 'buffer-zone bottom';
+    bottomBufferZone.style.position = 'absolute';
+    bottomBufferZone.style.width = '100%';
+    bottomBufferZone.style.height = '20px';
+    bottomBufferZone.style.left = '0';
+    bottomBufferZone.style.bottom = '-20px';
+    bottomBufferZone.style.background = 'transparent';
+    bottomBufferZone.style.zIndex = '949';
+    container.appendChild(bottomBufferZone);
+    
+    // 為上下緩衝區添加事件監聽
+    topBufferZone.addEventListener('mouseenter', activatePanel);
+    bottomBufferZone.addEventListener('mouseenter', activatePanel);
     
     // 將整合面板掛載到地圖容器上
     document.body.appendChild(container);
@@ -658,6 +699,67 @@ function createCustomScaleControl(map) {
     L.control.customScale().addTo(map || window.map);
 }
 
+/**
+ * 通用面板設置和鎖定機制
+ * @param {HTMLElement} panel 要管理的面板元素
+ * @param {string} activeMode 激活模式描述
+ * @param {string} iconHTML 模式圖標的HTML
+ * @param {string} iconColor 模式指示器背景色
+ * @param {boolean} locked 是否鎖定面板
+ */
+function setupPanelState(panel, activeMode, iconHTML, iconColor, locked) {
+    if (!panel) return;
+    
+    // 設置鎖定狀態
+    if (locked) {
+        panel.classList.add('active');
+        panel.classList.add('locked-open');
+        panel.dataset.activeMode = activeMode;
+        
+        // 更新切換按鈕
+        const toggle = panel.querySelector('.panel-toggle');
+        if (toggle) {
+            toggle.innerHTML = '<i class="fas fa-lock"></i>';
+            toggle.title = `面板已鎖定 (${activeMode}模式)`;
+        }
+        
+        // 添加視覺提示
+        const existingIndicator = panel.querySelector('.mode-indicator');
+        if (!existingIndicator) {
+            const modeIndicator = document.createElement('div');
+            modeIndicator.className = 'mode-indicator';
+            modeIndicator.innerHTML = iconHTML;
+            modeIndicator.style.backgroundColor = iconColor;
+            modeIndicator.style.color = 'white';
+            modeIndicator.style.padding = '5px 10px';
+            modeIndicator.style.borderRadius = '4px';
+            modeIndicator.style.marginBottom = '10px';
+            modeIndicator.style.textAlign = 'center';
+            modeIndicator.style.fontSize = '12px';
+            modeIndicator.style.fontWeight = 'bold';
+            
+            panel.insertBefore(modeIndicator, panel.firstChild);
+        }
+    } else {
+        // 解除鎖定
+        panel.classList.remove('locked-open');
+        panel.dataset.activeMode = '';
+        
+        // 恢復原始切換按鈕
+        const toggle = panel.querySelector('.panel-toggle');
+        if (toggle) {
+            toggle.innerHTML = '<i class="fas fa-cog"></i>';
+            toggle.title = "";
+        }
+        
+        // 移除模式指示器
+        const modeIndicator = panel.querySelector('.mode-indicator');
+        if (modeIndicator) {
+            modeIndicator.remove();
+        }
+    }
+}
+
 // 模塊導出 - 刪除 showExportHelpDialog
 window.uiModule = {
     initializeCollapsiblePanels,
@@ -668,6 +770,7 @@ window.uiModule = {
     fixHoverIssues,
     createLegendFilterPanel,
     handleFilterChange,
-    applyFilterDirectly
+    applyFilterDirectly,
+    setupPanelState // 添加此函數到導出
     // 不再導出 showExportHelpDialog
 };
