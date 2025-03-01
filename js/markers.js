@@ -532,6 +532,19 @@ function initializeFilter() {
 function exportMarkers() {
     console.log('匯出標記');
     
+    // 防止重複點擊，添加鎖定機制
+    if (window._exporting) {
+        console.log('匯出操作正在進行中，請稍候');
+        return;
+    }
+    
+    window._exporting = true;
+    
+    // 設置延時解鎖，無論操作成功與否
+    setTimeout(() => {
+        window._exporting = false;
+    }, 2000);
+    
     if (window.plltWorldData && window.plltWorldData.locations) {
         try {
             // 直接獲取所有地點數據
@@ -546,6 +559,7 @@ function exportMarkers() {
             // 檢查數據是否存在
             if (exportData.length === 0) {
                 window.uiModule.showToast('沒有標記可供匯出');
+                window._exporting = false;
                 return;
             }
             
@@ -567,16 +581,26 @@ ${formattedArray}
 // 共匯出 ${exportData.length} 個地點標記
 `;
             
-            // 直接下載為文本文件
-            const blob = new Blob([fileContent], { type: 'text/javascript' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pllt_locations_export_${exportData.length}_${new Date().toISOString().split('T')[0]}.js`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            // 直接下載為文本文件，避免重複建立元素
+            const url = URL.createObjectURL(new Blob([fileContent], { type: 'text/javascript' }));
+            const filename = `pllt_locations_export_${exportData.length}_${new Date().toISOString().split('T')[0]}.js`;
+            
+            // 使用現有的下載連結或建立新的
+            let downloadLink = document.getElementById('export-download-link');
+            if (!downloadLink) {
+                downloadLink = document.createElement('a');
+                downloadLink.id = 'export-download-link';
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+            }
+            
+            // 設置下載屬性並觸發下載
+            downloadLink.href = url;
+            downloadLink.download = filename;
+            downloadLink.click();
+            
+            // 清理 URL 對象
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             
             // 顯示成功訊息
             window.uiModule.showToast(`已下載 ${exportData.length} 個標記，可直接複製到 locations-data.js`);
@@ -597,10 +621,14 @@ ${formattedArray}
   return data;
 });
 console.log(JSON.stringify(exportData, null, 2));`);
+        } finally {
+            // 確保解鎖
+            window._exporting = false;
         }
     } else {
         window.uiModule.showToast('無法匯出：找不到標記數據');
         console.error('找不到 plltWorldData.locations 數據');
+        window._exporting = false;
     }
 }
 
