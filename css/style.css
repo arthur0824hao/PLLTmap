@@ -464,40 +464,27 @@ body {
     min-width: 180px !important;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.5) !important;
     border: 1px solid rgba(255, 215, 0, 0.5) !important;
-    transition: left 0.3s ease-out !important;
     opacity: 0.95 !important;
-    transform: scale(0.75) !important; /* 縮放為原來的0.75倍 */
+    transform: scale(0.9) !important; /* 放大為原來的0.9倍 */
     transform-origin: bottom left !important; /* 從左下角縮放 */
     overflow-y: auto !important;
     pointer-events: all !important;
-    will-change: left !important; /* 優化性能 */
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; /* 使用更優化的過渡曲線，減少抽搐 */
-    will-change: transform, left, box-shadow !important; /* 明確指定變化屬性，提高性能 */
-    backface-visibility: hidden !important; /* 減少渲染問題 */
-    transform-style: preserve-3d !important; /* 提高渲染性能 */
+    
+    /* 修改過渡動畫 - 改為完全平滑的移動，沒有彈性效果 */
+    transition: 
+        left 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+        box-shadow 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+        transform 0.5s ease !important;
+    will-change: left, box-shadow !important;
+    backface-visibility: hidden !important;
+    transform-style: preserve-3d !important;
+    filter: none !important;
 }
 
 .legend-filter-panel:hover, .legend-filter-panel.hover-active {
-    left: 20px !important;
+    left: 0px !important; /* 彈出後剛好切齊左側邊界 */
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important;
-}
-
-.legend-filter-panel::before {
-    content: "圖例與過濾" !important;
-    position: absolute !important;
-    right: -55px !important; /* 在面板右側顯示標籤 */
-    top: 50% !important;
-    transform: translateY(-50%) rotate(90deg) !important;
-    background-color: rgba(0, 0, 0, 0.8) !important;
-    padding: 5px 10px !important;
-    border-radius: 0 0 8px 8px !important;
-    color: white !important;
-    font-size: 12px !important;
-    white-space: nowrap !important;
-    border: 1px solid rgba(255, 215, 0, 0.5) !important;
-    border-top: none !important;
-    z-index: -1 !important;
-    pointer-events: none !important;
+    transform: scale(0.9) translateZ(0) !important; /* 強制使用GPU加速 */
 }
 
 .legend-filter-title {
@@ -562,4 +549,19 @@ body {
     0% { opacity: 0.8; }
     50% { opacity: 1; }
     100% { opacity: 0.8; }
+}
+
+/* 為緩衝區添加平滑過渡 */
+.buffer-zone.left,
+.buffer-zone.top,
+.buffer-zone.bottom {
+    transition: background-color 0.3s ease;
+}
+
+/* 提升渲染性能 */
+.legend-filter-list,
+.legend-filter-item,
+.legend-filter-title {
+    transform: translateZ(0) !important; /* 強制GPU加速 */
+    transition: none !important; /* 防止子元素單獨過渡 */
 }

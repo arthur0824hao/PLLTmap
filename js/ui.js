@@ -246,43 +246,51 @@ function createLegendFilterPanel() {
     bufferZone.style.zIndex = '949';
     container.appendChild(bufferZone);
     
-    // 優化懸浮行為 - 增強防抽搐機制
+    // 優化懸浮行為 - 增強防抽搐機制與平滑過渡
     let hoverTimer = null;
     let leaveTimer = null;
     let isActive = false;
     let isTransitioning = false; // 添加過渡狀態標記
     
+    // 優化懸浮行為 - 改為平滑過渡，移除彈性效果
     function activatePanel() {
-        if (isActive || isTransitioning) return; // 如果已經活躍或正在過渡中則忽略
-        clearTimeout(leaveTimer); // 清除離開計時器
+        if (isActive || isTransitioning) return;
+        clearTimeout(leaveTimer);
         
-        isTransitioning = true; // 標記開始過渡
-        isActive = true;
-        container.style.left = '20px';
-        container.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.6)';
+        isTransitioning = true;
         
-        // 過渡完成後重置過渡狀態
-        setTimeout(() => {
-            isTransitioning = false;
-        }, 350); // 略長於CSS過渡時間
+        requestAnimationFrame(() => {
+            // 使用平滑移動而非彈性效果
+            container.style.transition = 'left 0.7s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.7s ease';
+            container.style.left = '0px';
+            container.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.6)';
+            isActive = true;
+            
+            setTimeout(() => {
+                isTransitioning = false;
+            }, 700);
+        });
     }
     
     function deactivatePanel() {
-        if (!isActive || isTransitioning) return; // 如果未活躍或正在過渡中則忽略
-        clearTimeout(hoverTimer); // 清除懸停計時器
+        if (!isActive || isTransitioning) return;
+        clearTimeout(hoverTimer);
         
-        // 添加延時，防止意外的鼠標移出 - 顯著增加延遲時間
         leaveTimer = setTimeout(() => {
-            isTransitioning = true; // 標記開始過渡
-            isActive = false;
-            container.style.left = '-135px';
-            container.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
+            isTransitioning = true;
             
-            // 過渡完成後重置過渡狀態
-            setTimeout(() => {
-                isTransitioning = false;
-            }, 350); // 略長於CSS過渡時間
-        }, 800); // 大幅增加延遲時間，從300ms增加到800ms
+            requestAnimationFrame(() => {
+                // 使用平滑移動而非彈性效果
+                container.style.transition = 'left 0.7s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.7s ease';
+                container.style.left = '-135px';
+                container.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
+                isActive = false;
+                
+                setTimeout(() => {
+                    isTransitioning = false;
+                }, 700);
+            });
+        }, 800);
     }
     
     // 為緩衝區添加移入移出事件，比面板本身反應更靈敏
