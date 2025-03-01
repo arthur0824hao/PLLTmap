@@ -570,3 +570,76 @@ body {
 .leaflet-control-attribution {
     display: none !important;
 }
+
+
+/* 搜索區域樣式 */
+.search-tools {
+    margin-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 10px;
+}
+
+.search-tools h4 {
+    color: #FFD700;
+    margin-bottom: 8px;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    margin-bottom: 5px;
+}
+
+#location-search {
+    width: 100%;
+    padding: 8px;
+    padding-right: 30px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+#clear-search-btn {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    display: none;
+}
+
+/* 搜索結果樣式 */
+.search-results {
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    display: none;
+}
+
+.search-result-item {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.search-result-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 標記高亮動畫 - 修改為閃爍三次 */
+@keyframes marker-pulse {
+    0%, 33.33%, 66.66% { transform: scale(1); box-shadow: none; }
+    16.67%, 50%, 83.33% { transform: scale(1.5); box-shadow: 0 0 15px #FFD700; }
+    100% { transform: scale(1); }
+}
+
+.marker-highlight {
+    animation: marker-pulse 3s ease-in-out;
+    z-index: 10000 !important;
+}

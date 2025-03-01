@@ -16,7 +16,7 @@
 </head>
 <body>
     <div id="map"></div>
-    <div class="map-title">佩洛勒迪世界地圖</div>
+    <div class="map-title">佩洛勒迪世界</div>
     
     <!-- 圖例視窗已被隱藏，使用圖例+過濾器整合面板 -->
     <div class="map-legend" style="display:none;">
@@ -55,7 +55,15 @@
             <input type="file" id="import-file" accept=".json" style="display:none;">
         </div>
         
-        <!-- 移除地點列表部分 -->
+        <!-- 搜索工具 -->
+        <div class="search-tools">
+            <h4>搜索地點</h4>
+            <div class="search-container">
+                <input type="text" id="location-search" placeholder="輸入地點名稱...">
+                <button id="clear-search-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="search-results" class="search-results"></div>
+        </div>
     </div>
     
     <!-- Leaflet JS -->
@@ -88,6 +96,9 @@
             console.error("hardcodedLocations 未定義!");
         }
     </script>
+    
+    <!-- 搜索模塊 - 在UI模塊之前加載 -->
+    <script src="js/search.js"></script>
     
     <!-- UI 模塊 -->
     <script src="js/ui.js"></script>
@@ -171,6 +182,11 @@
             const mapElement = document.getElementById('map');
             if (mapElement) {
                 mapElement.addEventListener('click', handleBackupMapClick);
+            }
+            
+            // 初始化搜索功能
+            if (window.searchModule && window.searchModule.initializeSearch) {
+                window.searchModule.initializeSearch();
             }
         }
         

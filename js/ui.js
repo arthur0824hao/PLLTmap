@@ -290,13 +290,14 @@ function createLegendFilterPanel() {
                     isTransitioning = false;
                 }, 700);
             });
-        }, 800);
+        }, 300); // 縮短延遲時間，使面板更快縮回
     }
     
     // 為緩衝區添加移入移出事件，比面板本身反應更靈敏
     container.addEventListener('mouseenter', activatePanel);
     bufferZone.addEventListener('mouseenter', activatePanel);
     container.addEventListener('mouseleave', deactivatePanel);
+    bufferZone.addEventListener('mouseleave', deactivatePanel); // 添加緩衝區的離開事件
     
     // 添加額外的垂直緩衝區，防止從上下方移出時的抽搐問題
     const topBufferZone = document.createElement('div');
@@ -324,6 +325,33 @@ function createLegendFilterPanel() {
     // 為上下緩衝區添加事件監聽
     topBufferZone.addEventListener('mouseenter', activatePanel);
     bottomBufferZone.addEventListener('mouseenter', activatePanel);
+    topBufferZone.addEventListener('mouseleave', deactivatePanel);
+    bottomBufferZone.addEventListener('mouseleave', deactivatePanel);
+    
+    // 添加安全機制：當點擊地圖上其他區域時收起面板
+    document.addEventListener('click', function(e) {
+        if (isActive && !container.contains(e.target) && !bufferZone.contains(e.target) && 
+            !topBufferZone.contains(e.target) && !bottomBufferZone.contains(e.target)) {
+            deactivatePanel();
+        }
+    });
+    
+    // 添加額外安全機制：滑鼠離開視窗一段時間後強制檢查
+    document.addEventListener('mousemove', function(e) {
+        // 檢查滑鼠是否在面板附近
+        const containerRect = container.getBoundingClientRect();
+        const isNearContainer = e.clientX < (containerRect.right + 50) && 
+                              e.clientY > (containerRect.top - 50) && 
+                              e.clientY < (containerRect.bottom + 50);
+        
+        if (isActive && !isNearContainer) {
+            // 如果滑鼠遠離面板區域，延遲一段時間後關閉
+            clearTimeout(leaveTimer);
+            leaveTimer = setTimeout(() => {
+                deactivatePanel();
+            }, 1000);
+        }
+    });
     
     // 將整合面板掛載到地圖容器上
     document.body.appendChild(container);
