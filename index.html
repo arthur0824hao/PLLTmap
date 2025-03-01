@@ -191,6 +191,40 @@
             setTimeout(function() {
                 PLLTLogger.logInfo('系統測試', '日誌系統功能測試');
             }, 1000);
+            
+            // 匯入/匯出相關按鈕 - 修復事件綁定
+            const exportBtn = document.getElementById('export-markers-btn');
+            if (exportBtn) {
+                // 移除可能的舊事件監聽器
+                exportBtn.removeEventListener('click', function(){});
+                
+                // 添加新的監聽器
+                exportBtn.addEventListener('click', function() {
+                    console.log('點擊匯出按鈕');
+                    if (window.markersModule && typeof window.markersModule.exportMarkers === 'function') {
+                        window.markersModule.exportMarkers();
+                    } else {
+                        console.error('找不到匯出功能');
+                        alert('匯出功能不可用，請使用控制台方法');
+                        console.log('請在控制台運行: copy(JSON.stringify(plltWorldData.locations.map(loc => {const {markerRef, ...data} = loc; return data;}), null, 2))');
+                    }
+                });
+                console.log('匯出按鈕事件已重新綁定');
+            }
+            
+            // 添加快速匯出鍵盤快捷鍵
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+Shift+E 快速匯出所有標記
+                if (e.ctrlKey && e.shiftKey && (e.key === 'e' || e.key === 'E')) {
+                    e.preventDefault();
+                    console.log('使用鍵盤快捷鍵匯出');
+                    if (window.markersModule && typeof window.markersModule.exportMarkers === 'function') {
+                        window.markersModule.exportMarkers();
+                    } else {
+                        console.log('請在控制台運行: copy(JSON.stringify(plltWorldData.locations.map(loc => {const {markerRef, ...data} = loc; return data;}), null, 2))');
+                    }
+                }
+            });
         });
     </script>
 </body>

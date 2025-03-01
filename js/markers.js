@@ -528,43 +528,79 @@ function initializeFilter() {
 }
 
 // 匯出/匯入函數
+// 匯出標記 - 修改為下載格式化的代碼片段，可直接複製到硬編碼部分
 function exportMarkers() {
     console.log('匯出標記');
     
-    if (window.plltWorldData && window.plltWorldData.getLocationsJson) {
-        // 使用資料庫API取得JSON格式的地點資料
-        const jsonData = window.plltWorldData.getLocationsJson();
-        
-        // 複製到剪貼簿
+    if (window.plltWorldData && window.plltWorldData.locations) {
         try {
-            navigator.clipboard.writeText(jsonData).then(() => {
-                window.uiModule.showToast('已複製地點資料到剪貼簿！');
-                
-                // 同時也提供下載
-                const blob = new Blob([jsonData], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'pllt_world_locations.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            });
-        } catch (err) {
-            console.error('無法複製到剪貼簿:', err);
+            // 直接獲取所有地點數據
+            const locations = window.plltWorldData.locations;
             
-            // 如果複製失敗，仍提供下載
-            const blob = new Blob([jsonData], { type: 'application/json' });
+            // 清理數據 - 移除 markerRef (這是瀏覽器中的DOM元素，無法序列化)
+            const exportData = locations.map(location => {
+                const { markerRef, ...cleanLocation } = location;
+                return cleanLocation;
+            });
+            
+            // 檢查數據是否存在
+            if (exportData.length === 0) {
+                window.uiModule.showToast('沒有標記可供匯出');
+                return;
+            }
+            
+            // 創建格式化的JavaScript代碼，準備作為hardcodedLocations的內容
+            // 使用2空格縮進
+            const formattedArray = JSON.stringify(exportData, null, 2)
+                .replace(/"([^"]+)":/g, "$1:") // 將 "key": 轉換為 key:
+                .replace(/^/gm, "  ") // 每行前加兩個空格
+                .replace(/^  \[/, "const hardcodedLocations = [") // 首行添加變數定義
+                .replace(/  \]$/, "];"); // 末行添加分號
+            
+            // 創建包含使用說明的完整文件內容
+            const fileContent = 
+`// PLLT World 地圖位置數據 - 由匯出工具生成於 ${new Date().toLocaleString()}
+// 複製下列內容到 locations-data.js 文件中的 hardcodedLocations 數組部分
+
+${formattedArray}
+
+// 共匯出 ${exportData.length} 個地點標記
+`;
+            
+            // 直接下載為文本文件
+            const blob = new Blob([fileContent], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'pllt_world_locations.json';
+            a.href = url;
+            a.download = `pllt_locations_export_${exportData.length}_${new Date().toISOString().split('T')[0]}.js`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            URL.revokeObjectURL(url);
             
-            window.uiModule.showToast('已下載地點資料檔案');
+            // 顯示成功訊息
+            window.uiModule.showToast(`已下載 ${exportData.length} 個標記，可直接複製到 locations-data.js`);
+            
+            // 在控制台也輸出格式化內容，作為備份
+            console.log('=========== 可複製到 hardcodedLocations 的格式化代碼 ===========');
+            console.log(formattedArray);
+            console.log('==================================================================');
+            
+        } catch (error) {
+            console.error('匯出標記時出錯:', error);
+            window.uiModule.showToast('匯出失敗，請檢查控制台獲取更多信息');
+            
+            // 顯示應急使用方式
+            console.log('=== 匯出失敗，請嘗試以下指令 ===');
+            console.log(`const exportData = plltWorldData.locations.map(loc => {
+  const { markerRef, ...data } = loc; 
+  return data;
+});
+console.log(JSON.stringify(exportData, null, 2));`);
         }
     } else {
-        alert('無法匯出：資料庫功能不可用');
+        window.uiModule.showToast('無法匯出：找不到標記數據');
+        console.error('找不到 plltWorldData.locations 數據');
     }
 }
 
@@ -657,7 +693,7 @@ function handleMapClick(e) {
     document.getElementById('marker-type').value = '自定義';
     document.getElementById('marker-description').value = '';
     markerForm.style.display = 'block';
-    
+        
     // 保存坐標
     markerForm.dataset.lat = e.latlng.lat;
     markerForm.dataset.lng = e.latlng.lng;
@@ -675,8 +711,10 @@ window.markersModule = {
     exportMarkers,
     handleFileImport,
     handleMapClick, // 確保此函數存在
-    isAddingMarker: () => addingMarker,
-    setupFormEnterKeyBehavior,
+    showMarkerForm,
+    updateMarkerTypeOptions,
+    handleDescriptionInputEnter,
     handleNameInputEnter,
-    handleDescriptionInputEnter
+    setupFormEnterKeyBehavior,
+    isAddingMarker: () => addingMarker
 };

@@ -369,20 +369,6 @@ function applyFilterDirectly() {
     }
 }
 
-// 模塊導出 - 添加新函數
-window.uiModule = {
-    initializeCollapsiblePanels,
-    createDynamicLegend,
-    createToastElement,
-    showToast,
-    createCustomScaleControl,
-    fixHoverIssues,
-    createLegendFilterPanel,
-    handleFilterChange,
-    applyFilterDirectly
-};
-
-
 // 防止懸浮抽搐問題的函數 (從 hover-fix.js 整合)
 function fixHoverIssues() {
     console.log('應用懸浮修復...');
@@ -671,3 +657,17 @@ function createCustomScaleControl(map) {
     // 添加自定义比例尺
     L.control.customScale().addTo(map || window.map);
 }
+
+// 模塊導出 - 刪除 showExportHelpDialog
+window.uiModule = {
+    initializeCollapsiblePanels,
+    createDynamicLegend,
+    createToastElement,
+    showToast,
+    createCustomScaleControl,
+    fixHoverIssues,
+    createLegendFilterPanel,
+    handleFilterChange,
+    applyFilterDirectly
+    // 不再導出 showExportHelpDialog
+};
